@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+<head>
+    <title>엔트리 조회</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>엔트리 조회</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>사전</li>
+                    <li><span>&gt;</span><strong>엔트리 조회</strong></li>
+                    <!--li><span>&gt;</span><strong th:text="${dictionary} ? ${dictionary.getDictionaryType().getLabel()} + ' 엔트리 조회'">엔트리 조회</strong></li-->
+                </ul>
+            </div>
+            <div class="cont_box mt0">
+                <h3 id="entryCount">사전 엔트리 조회</h3>
+                <div class="container">
+                    <div class="cont1 clearfix">
+                        <div class="fL">
+                            <select class="w150" id="dictionary" autofocus onchange="javascript:location.href=`${contextPath}/dictionary/${this.value}/entries`;">
+                                <option th:value="null" th:text="'사전 선택'" selected disabled hidden></option>
+                                <!--/* 사전 리스트 출력. */-->
+                                <optgroup label="수용어 사전">
+                                    <th:block th:each="dict: ${dictionaries.?[getLabel().equals('수용어 사전')]}">
+                                        <option th:value="${dict.dictionaryId}" th:text="${dict.dictionaryName}" th:selected="${dict.dictionaryId == dictionaryId}? 'selected'"
+                                                th:title="|- 설명: ${dict.dictionaryDesc}&#13;- 엔트리: ${dict.dictionaryEntryCnt}건|">
+                                        </option>
+                                    </th:block>
+                                </optgroup>
+                                <optgroup label="불용어 사전">
+                                    <th:block th:each="dict: ${dictionaries.?[getLabel().equals('불용어 사전')]}">
+                                        <option th:value="${dict.dictionaryId}" th:text="${dict.dictionaryName}" th:selected="${dict.dictionaryId == dictionaryId}? 'selected'"
+                                                th:title="|- 설명: ${dict.dictionaryDesc}&#13;- 엔트리: ${dict.dictionaryEntryCnt}건|">
+                                        </option>
+                                    </th:block>
+                                </optgroup>
+                                <optgroup label="불용 패턴">
+                                    <th:block th:each="dict: ${dictionaries.?[getLabel().equals('불용 패턴')]}">
+                                        <option th:value="${dict.dictionaryId}" th:text="${dict.dictionaryName}" th:selected="${dict.dictionaryId == dictionaryId}? 'selected'"
+                                                th:title="|- 설명: ${dict.dictionaryDesc}&#13;- 엔트리: ${dict.dictionaryEntryCnt}건|">
+                                        </option>
+                                    </th:block>
+                                </optgroup>
+                                <optgroup label="불용 어절">
+                                    <th:block th:each="dict: ${dictionaries.?[getLabel().equals('불용 어절')]}">
+                                        <option th:value="${dict.dictionaryId}" th:text="${dict.dictionaryName}" th:selected="${dict.dictionaryId == dictionaryId}? 'selected'"
+                                                th:title="|- 설명: ${dict.dictionaryDesc}&#13;- 엔트리: ${dict.dictionaryEntryCnt}건|">
+                                        </option>
+                                    </th:block>
+                                </optgroup>
+                                <optgroup label="문장 분리 어절">
+                                    <th:block th:each="dict: ${dictionaries.?[getLabel().equals('문장 분리 어절')]}">
+                                        <option th:value="${dict.dictionaryId}" th:text="${dict.dictionaryName}" th:selected="${dict.dictionaryId == dictionaryId}? 'selected'"
+                                                th:title="|- 설명: ${dict.dictionaryDesc}&#13;- 엔트리: ${dict.dictionaryEntryCnt}건|">
+                                        </option>
+                                    </th:block>
+                                </optgroup>
+                                <optgroup label="매칭 패턴">
+                                    <th:block th:each="dict: ${dictionaries.?[getLabel().equals('매칭 패턴')]}">
+                                        <option th:value="${dict.dictionaryId}" th:text="${dict.dictionaryName}" th:selected="${dict.dictionaryId == dictionaryId}? 'selected'"
+                                                th:title="|- 설명: ${dict.dictionaryDesc}&#13;- 엔트리: ${dict.dictionaryEntryCnt}건|">
+                                        </option>
+                                    </th:block>
+                                </optgroup>
+                                <!--/* 사전 리스트 출력 end */-->
+                            </select>
+
+                            <!--/* 10, 20, 50 개 모아보기 */-->
+                            <th:block th:if="${dictionaryId > 0}">
+                                <!--label class="ml15" for="show">show</label-->
+                                <select name="size" class="w65 ml30" id="show" onchange="fnDoList(1)">
+									<option value="10" selected="selected">10</option>
+									<option value="20">20</option>
+									<option value="50">50</option>
+								</select>
+                                <label for="show" class="ml10">개씩 보기</label>
+                                <!--/* 10, 20, 50 개 모아보기 end */-->
+
+                                <!--/* 엔트리 검색 */-->
+                                <input type="text" id="searchPattern" name="searchPattern" class="w220 ml20" th:value="${searchPattern}" placeholder="사전 엔트리 검색" onkeydown="if(event.keyCode === 13) searchEntry()">
+                                <a href="#" class="btn_sch w35 ml10"
+                                   onclick="searchEntry()"><i class="fas fa-search"></i></a>
+                                <!--/* 엔트리 검색 end */-->
+                            </th:block>
+                        </div>
+                        <!--/* 엔트리 삭제 */-->
+                        <div class="fR">
+                            <button type="button" class="btn btn_red w98 ml5" onclick="deleteEntries(document.getElementById('dictionary').value)"><i class="fas fa-trash-alt  mr5"></i> 삭제
+                            </button>
+                        </div>
+                        <!--/* 엔트리 삭제 end */-->
+                    </div>
+
+                    <!--사전 Table-->
+                    <table id="dataTable" class="basic_tbl_type mt20 text-ellipsis">
+                    	<colgroup>
+							<col width="6%;">
+							<col width="6%;">
+							<col width="*;">
+						</colgroup>
+						<thead>
+						<tr>
+							<th>선택</th>
+							<th>NO.</th>
+							<th>단어</th>
+						</tr>
+						</thead>
+						<tbody>
+							<td colspan="3">사전을 먼저 선택해주세요.</td>
+						</tbody>
+                    </table>
+                    <!--사전 Table end-->
+                    
+                    <!--엔트리 단어 추가-->
+                    <div class="align_l clearfix" th:if="${dictionaryId > 0}">
+                        <input type="text" class="ml0 w93p mt30" id="entryOnly" name="entry" placeholder="추가할 사전 엔트리" onkeydown="if(event.keyCode === 13) addEntry()">
+                        <input type="button" class="btn btn_sky w65 mt30 ml10" value="추가" onclick="addEntry()" style="font-size:inherit;">
+                    </div>
+                    <!--엔트리 단어 추가 end -->
+
+                    <!--엔트리 정보 pagination-->
+                    <div id="pageNav" class="page_btn_num clear_both">
+                    </div>
+                    <!--엔트리 정보 pagination end-->
+
+                </div>
+                <!-- container end-->
+            </div>
+            <!-- cont_box end -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+    <!-- cont_wrap End-->
+
+    <script type="text/javascript" th:src ="@{/mng/dictionary/entries.js}"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            if (location.pathname.startsWith("/dictionary/entries")) {
+                // alert("사전을 먼저 선택해주세요.");
+            } else {
+                let searchParams = new URLSearchParams(location.search);
+                if (searchParams.has('searchPattern')) {
+                    let searchPattern = searchParams.get('searchPattern');
+                    document.querySelector("input[name=searchPattern]").value = searchPattern;
+
+                    let searchPatternRegex = new RegExp(`(${searchPattern})`);
+                    document.querySelectorAll('tr td.entry').forEach(i => {
+                        i.innerHTML = i.innerHTML.replace(searchPatternRegex, '<i style="background-color:yellow;">$1</i>');
+                    });
+
+                }
+            }
+
+            // 사용성 - table tr 에 click 이벤트 등록
+            checkByTableRowClick("table.basic_tbl_type tbody tr");
+        });
+    </script>
+</section>
+</body>
+
+</html>

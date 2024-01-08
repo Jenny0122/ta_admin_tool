@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.task.mapper.TaskMapper">
+    
+	<!-- 테스크 이름 중복 체크 -->
+	<select id="chkDuplicatedTaskName" parameterType="kr.co.wisenut.textminer.collection.vo.CollectionVo" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.task.mapper.TaskMapper.chkDuplicatedTaskName */
+			   COUNT(*) AS totalCount
+		FROM   WISETM_TASK
+		WHERE  TASK_NAME = #{taskName}
+		<if test='taskId != 0 and taskId != null'>
+		  AND  TASK_ID != #{taskId}
+		</if>
+	</select>
+    
+	<!-- 컬렉션 및 사전이 현재 사용중인지 체크 -->
+	<select id="chkTaskResouce" parameterType="hashMap" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.task.mapper.TaskMapper.chkTaskResouce */
+			   USE_CNT
+		FROM
+		<if test='resourceType == "collection"'>
+			 ( SELECT COUNT(*) AS USE_CNT
+			   FROM   WISETM_TASK
+			   WHERE  COLLECTION_ID = #{resourceId} ) T
+		</if>
+		<if test='resourceType == "dictionary"'>
+			 ( SELECT COUNT(*) AS USE_CNT
+			   FROM
+			   JSON_TABLE (( SELECT JSON_ARRAYAGG(TASK_CONFIG)
+							 FROM   WISETM_TASK
+							 WHERE  1 = 1
+							   AND  TASK_TYPE NOT IN ('AUTO_CLASSIFICATION', 'EMOTION_ANALYZE'))
+						   , '$[*]' COLUMNS( whiteSharedEnabled VARCHAR(1) PATH '$.whiteSharedEnabled'
+										   , whiteDictionary VARCHAR(100) PATH '$.whiteDictionary'
+										   , blackSharedEnabled VARCHAR(1) PATH '$.blackSharedEnabled'
+										   , blackDictionary VARCHAR(100) PATH '$.blackDictionary'
+										   , blackPattern VARCHAR(100) PATH '$.blackPattern'
+										   , blackWord VARCHAR(100) PATH '$.blackWord'
+										   , splitSentWord VARCHAR(100) PATH '$.splitSentWord'
+										   , groupPattern VARCHAR(100) PATH '$.groupPattern'
+							 			   )
+						   ) JT
+			   WHERE  whiteSharedEnabled = #{resourceId}
+				  OR  whiteDictionary = #{resourceId}
+				  OR  blackSharedEnabled = #{resourceId}
+				  OR  blackDictionary = #{resourceId}
+				  OR  blackPattern = #{resourceId}
+				  OR  blackWord = #{resourceId}
+				  OR  splitSentWord = #{resourceId}
+				  OR  groupPattern = #{resourceId} ) T
+		</if>
+	</select>
+    
+    <!-- 사용중인 테스크 확인 -->
+    <select id="chkEnabledTask" parameterType="kr.co.wisenut.textminer.task.vo.TaskVo" resultType="int">
+    	SELECT /* kr.co.wisenut.textminer.task.mapper.TaskMapper.chkEnabledTask */
+    		   COUNT(*)
+    	FROM   WISETM_TASK
+    	WHERE  1 = 1
+    	  /* AND  PROJECT_ID = ${projectId} */
+    	  AND  TASK_TYPE = #{taskType}
+    	  AND  ENABLED = 'Y'
+    </select>
+
+	<!-- 테스크 구분 별 기 등록된 테스크 건수 가져오기 -->
+    <select id="getTaskCnt" parameterType="kr.co.wisenut.textminer.task.vo.TaskVo" resultType="int">
+    	SELECT /* kr.co.wisenut.textminer.task.mapper.TaskMapper.getTaskCnt */
+    		   COUNT(*)
+    	FROM   WISETM_TASK
+    	WHERE  PROJECT_ID = #{projectId}
+    	  AND  TASK_TYPE = #{taskType}
+    </select>
+    
+    <!-- 프로젝트에 해당하는 테스크 리스트 가져오기-->
+    <select id="getTaskList" parameterType="hashmap" resultType="kr.co.wisenut.textminer.task.vo.TaskVo">
+    	SELECT /* kr.co.wisenut.textminer.task.mapper.TaskMapper.getTaskList */
+    		   TASK_ID AS "taskId"
+    		 , TASK_NAME AS "taskName"
+    		 , TASK_TYPE AS "taskType"
+    		 , PROJECT_ID AS "projectId"
+    		 , MODEL_NAME AS "modelName"
+    		 , COALESCE(MODEL_FILE, ' ') AS "modelFile"
+    		 , ENABLED AS "enabled"
+    		 , COALESCE(TO_CHAR(LAST_ANALYZE_DT, 'YYYY.MM.DD HH24:MI'), ' ') AS "lastAnalyzeDt"
+    	FROM   WISETM_TASK
+    	WHERE  PROJECT_ID = #{projectId}
+    	  AND  TASK_TYPE = #{taskType}
+    	ORDER BY TASK_ID DESC
+    </select>
+    
+    <!-- 테스크 상세조회 -->
+    <select id="getTaskInfo" parameterType="kr.co.wisenut.textminer.task.vo.TaskVo" resultType="kr.co.wisenut.textminer.task.vo.TaskVo">
+    	SELECT /* kr.co.wisenut.textminer.task.mapper.TaskMapper.getTaskInfo */
+    		   TASK_ID AS "taskId"
+    		 , TASK_NAME AS "taskName"
+    		 , TASK_TYPE AS "taskType"
+    		 , PROJECT_ID AS "projectId"
+    		 , COLLECTION_ID AS "collectionId"
+    		 , TASK_CONFIG AS "taskConfig"
+    		 , MODEL_NAME AS "modelName"
+    		 , MODEL_FILE AS "modelFile"
+    		 , ENABLED AS "enabled"
+    		 , CRE_DT AS "creDt"
+    		 , CRE_USER AS "creUser"
+    		 , TO_CHAR(MOD_DT, 'YYYY-MM-DD HH24:MI:SS') AS "modDt"
+    		 , MOD_USER AS "modUser"
+    		 , TO_CHAR(LAST_ANALYZE_DT, 'YYYY-MM-DD HH24:MI:SS') AS "lastAnalyzeDt"
+    	FROM   WISETM_TASK
+    	WHERE  TASK_ID = #{taskId}
+    	  AND  PROJECT_ID = #{projectId}
+    </select>
+        
+    <!-- 테스크 상세조회(모델사용) -->
+    <select id="getTaskInfoUseModel" parameterType="kr.co.wisenut.textminer.model.vo.ModelVo" resultType="kr.co.wisenut.textminer.task.vo.TaskVo">
+    	SELECT /* kr.co.wisenut.textminer.task.mapper.TaskMapper.getTaskInfoUseModel */
+    		   TASK_ID AS "taskId"
+    		 , TASK_NAME AS "taskName"
+    		 , TASK_TYPE AS "taskType"
+    		 , PROJECT_ID AS "projectId"
+    		 , COLLECTION_ID AS "collectionId"
+    		 , TASK_CONFIG AS "taskConfig"
+    		 , MODEL_NAME AS "modelName"
+    		 , MODEL_FILE AS "modelFile"
+    		 , ENABLED AS "enabled"
+    		 , CRE_DT AS "creDt"
+    		 , CRE_USER AS "creUser"
+    		 , MOD_DT AS "modDt"
+    		 , MOD_USER AS "modUser"
+    	FROM   WISETM_TASK
+    	WHERE  TASK_ID = #{taskId}
+    	  AND  PROJECT_ID = #{projectId}
+    </select>
+    
+    <!-- 테스크 등록 -->
+    <insert id="insertTask" parameterType="kr.co.wisenut.textminer.task.vo.TaskVo">
+		<selectKey resultType="int" keyProperty="taskId" order="BEFORE">
+			SELECT COALESCE(MAX(TASK_ID),0) + 1 FROM WISETM_TASK
+		</selectKey>
+    
+    	INSERT /* kr.co.wisenut.textminer.task.mapper.TaskMapper.insertTask */
+    	INTO   WISETM_TASK (TASK_ID, TASK_NAME, TASK_TYPE, PROJECT_ID, COLLECTION_ID, TASK_CONFIG, MODEL_NAME, MODEL_FILE, ENABLED, CRE_DT, CRE_USER, MOD_DT, MOD_USER)
+    	VALUES ( #{taskId}
+    		   , #{taskName}
+    		   , #{taskType}
+    		   , #{projectId}
+    		   , #{collectionId}
+    		   , #{taskConfig}
+    		   , #{modelName, jdbcType=VARCHAR}
+    		   , #{modelFile, jdbcType=VARCHAR}
+    		   , 'N'
+    		   , CURRENT_TIMESTAMP
+    		   , #{creUser}
+    		   , CURRENT_TIMESTAMP
+    		   , #{modUser}
+    		   )
+    </insert>
+    
+    <!-- 테스크 정보변경 -->
+    <update id="updateTask" parameterType="kr.co.wisenut.textminer.task.vo.TaskVo">
+    	UPDATE /* kr.co.wisenut.textminer.task.mapper.TaskMapper.updateTask */
+    		   WISETM_TASK
+    	<if test='enableFlag == "Y"'>
+			<if test='enabled != null and enabled !=""'>
+			SET	   ENABLED = #{enabled}
+			</if>
+    	</if>
+    	<if test='enableFlag == null or enableFlag == ""'>
+	    	SET	   MOD_DT = CURRENT_TIMESTAMP
+	    		 , MOD_USER = #{modUser}
+			<if test='taskName != null and taskName !=""'>
+				 , TASK_NAME = #{taskName}
+			</if>
+			<if test='collectionId != null and collectionId !=""'>
+				 , COLLECTION_ID = #{collectionId}
+			</if>
+			<if test='taskConfig != null and taskConfig !=""'>
+				 , TASK_CONFIG = #{taskConfig}
+			</if>
+			<if test='modelName != null and modelName !=""'>
+				 , MODEL_NAME = #{modelName}
+			</if>
+			<if test='modelFile != null and modelFile !=""'>
+				 , MODEL_FILE = #{modelFile}
+			</if>
+			<if test='enabled != null and enabled !=""'>
+				 , ENABLED = #{enabled}
+			</if>
+    	</if>
+    	WHERE  TASK_ID = #{taskId}
+    	  AND  PROJECT_ID = #{projectId}
+    </update>
+    
+    <!-- 테스크 삭제 -->
+    <delete id="deleteTask" parameterType="kr.co.wisenut.textminer.task.vo.TaskVo">
+    	DELETE /* kr.co.wisenut.textminer.task.mapper.TaskMapper.deleteTask */
+    	FROM   WISETM_TASK
+    	WHERE  1 = 1
+    	<if test='taskId != null and taskId != ""'>
+		  AND  TASK_ID = #{taskId}
+    	</if>
+    	<if test='projectId != null and projectId != ""'>
+		  AND  PROJECT_ID = #{projectId}
+    	</if>
+    </delete>
+    
+</mapper>

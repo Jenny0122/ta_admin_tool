@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+
+<head>
+    <title>문서 조회</title>
+</head>
+
+<body>
+
+<section layout:fragment="content">
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>문서조회</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>컬렉션</li>
+                    <li><span>&gt;</span><strong>문서 조회</strong></li>
+                </ul>
+            </div>
+            <div class="cont_box m0"    >
+                <h3 id="documentCount"></h3>
+                <div class="container">
+                    <div class="cont1 clearfix">
+                        <div class="fL">
+                            <select class="w220 fL" id="divide" autofocus onchange="javascript:location.href=`${contextPath}/collection/${this.value}/documents`;">
+                                <option value="0" selected disabled> 컬렉션 선택</option>
+                                <!--/* 컬렉션 리스트 출력. */-->
+                                <th:block th:each="coll: ${collections}">
+                                    <option th:value="${coll.collectionId}" th:text="${coll.collectionName}" th:selected="${coll.collectionId == collectionId}? 'selected'" th:title="|- 설명: ${coll.collectionDesc}&#13;- 문서: ${coll.documentCount}건|">컬렉션명</option>
+                                </th:block>
+                                <!--/* 컬렉션 리스트 출력 end */-->
+                            </select>
+                            <input type="hidden" id="collectionId" value="${collectionId}">
+
+							<!-- <th:block th:if="${collectionId > 0}"> -->
+	                            <!--/* 컬렉션 검색 */-->
+	                            <!-- <input type="text" id="searchPattern" name="searchPattern" class="w220 ml20" th:value="${searchPattern}" placeholder="컬렉션 검색" onkeydown="if(event.keyCode === 13) fnDoList(1)">-->
+	                            <!-- <a href="#" class="btn_sch w35 ml10" onclick="fnDoList(1)"><i class="fas fa-search"></i></a>-->
+	                            <!--/* 컬렉션 검색 end */-->
+	                        <!-- </th:block>-->
+                        </div>
+                        <div class="fR">
+                            <!--<button type="button" class="btn btn_red w98 ml5"><i class="fas fa-trash-alt  mr5"></i> 삭제</button>-->
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto; padding: 10px 10px">
+                        <!--컬렉션 문서 조회 table-->
+                        <table id="dataTable" class="basic_tbl_type mt20 text-ellipsis" style="table-layout: unset">
+                        	<colgroup>
+								<col width="6%;">
+								<col width="*;">
+							</colgroup>
+							<thead>
+							<tr>
+								<th>NO.</th>
+								<th></th>
+							</tr>
+							</thead>
+							<tbody>
+							<tr th:if="${entryPage==null}">
+								<td colspan="2">컬렉션을 먼저 선택해주세요.</td>
+							</tr>
+							</tbody>
+                        </table>
+                        <!--컬렉션 문서조회 table end-->
+                    </div>
+
+                    <!--컬렉션 문서조회 pagination. -->
+                    <div id="pageNav" class="page_btn_num clear_both">
+					</div>
+                    <!--컬렉션 문서 조회 pagination end-->
+                </div>
+                <!-- container end-->
+            </div>
+            <!-- cont_box end -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+    <!-- cont_wrap End-->
+
+	<!--문서 확인 팝업-->
+	<div id="document_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+		<div class="bg"></div>
+
+		<div class="pop_box medium">
+			<!--문서 확인 top-->
+			<div class="top clearfix">
+				<h3 class="fL">문서 확인</h3>
+				<a href="#" class="close_create close fR" onclick="hidePopup('document');"><i
+						class="fas fa-times"></i></a>
+			</div>
+			<!--문서 확인 top end-->
+
+			<form onsubmit="return updateDocument();">
+				<!--문서 확인 내용-->
+				<div class="pop_container large">
+					<div class="cont_box m0">
+						<!-- 각 문서마다 양식이 다르기 때문에, 해당 영역에 양식 삽입 -->
+						<div id="documentForm" class="cont1 clearfix">
+							
+						</div>
+					</div>
+				</div>
+				<!--문서 확인 내용 end-->
+
+				<!--문서 확인 footer-->
+				<div class="pop_bottom align_c">
+					<button type="submit" class="btn btn_blue w98" onclick="trimInputFields()">수정</button>
+				</div>
+				<!--문서 확인 footer end-->
+
+			</form>
+		</div>
+	</div>
+	<!--컬렉션 추가 팝업 end-->
+
+	<script type="text/javascript" th:src="@{/mng/collection/documents.js}"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+        });
+    </script>
+</section>
+</body>
+
+</html>

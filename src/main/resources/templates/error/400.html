@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>존재하지 않는 페이지 입니다.</title>
+</head>
+<body>
+<script type="text/javascript" th:inline="javascript">
+    /*<![CDATA[*/
+    console.error(document.referrer);
+    console.error(/*[[ ${errorMessage} ]]*/);
+    console.error("referer: ", /*[[ ${referer} ]]*/);
+    console.error("redirectURI: ", /*[[ ${redirectURI} ]]*/);
+
+    let redirectURI = /*[[ ${redirectURI} ]]*/;
+    if (!redirectURI) {
+        redirectURI = "/";
+    }
+    confirm("존재하지 않는 페이지 입니다.");
+    location.href = redirectURI;
+
+    /*]]>*/
+</script>
+</body>
+</html>

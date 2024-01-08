@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="|${code} ${message}|">500 Error</title>
+</head>
+<body>
+<fieldset>
+    <legend><h2 th:text="|${#response.status} ${#request.getRequestURI()}|"></h2></legend>
+    <h3 th:text="${textminerMessage}"></h3>
+    <h3 th:text="${localizedMessage}"></h3>
+    <!--    private String declaringClass;
+        private String methodName;
+        private String fileName;
+        private int    lineNumber;
+    -->
+    <ul th:each="trace,iterStat: ${stackTrace}">
+        <li th:text="${trace}"></li>
+    </ul>
+</fieldset>
+</body>
+</html>

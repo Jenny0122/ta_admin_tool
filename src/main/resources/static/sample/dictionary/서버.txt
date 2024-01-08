@@ -1,0 +1,82 @@
+서버
+DEV : 129.10.18.155
+DEV-DB : 129.10.18.144:1521 / 
+
+서버 Password
+- 운영 : ipc*51tm
+- 테스트 : ipc*52tm
+
+포트
+1. 자동분류
+ - listener : 15710(서비스) 15711(테스트)
+ - trainer  : 15720(서비스) 15721(테스트)
+ - analyzer : 15730(서비스) 15731(테스트)
+
+2. 감성분석
+ - listener : 15810(서비스) 15811(테스트)
+ - trainer  : 15820(서비스) 15821(테스트)
+ - analyzer : 15830(서비스) 15831(테스트)
+
+3. 그 외
+ - 키워드 : 15200(서비스) 15201(테스트)
+ - 요약   : 15210(서비스) 15211(테스트)
+ - 연관어 : 15220(서비스) 15221(테스트)
+
+
+실행 스크립트
+1. 자동분류 테스트 
+ - ./classifier.sh start autoClassify TEST ./config/autoClassify/test/test.listener.config.json ./config/autoClassify/test/test.trainer.config.json ./config/autoClassify/test/test.analyzer.config.json ./knowledge/config.yaml
+2. 감성분석 테스트 
+ - ./classifier.sh start emoClassify TEST ./config/emoClassify/test/test.listener.config.json ./config/emoClassify/test/test.trainer.config.json ./config/emoClassify/test/test.analyzer.config.json ./knowledge/config.yaml
+3. 자동분류 운영 
+ - ./classifier.sh start autoClassify PROD ./config/autoClassify/prod/prod.listener.config.json ./config/autoClassify/prod/prod.trainer.config.json ./config/autoClassify/prod/prod.analyzer.config.json ./knowledge/config.yaml
+4. 감성분석 운영 
+ - ./classifier.sh start emoClassify PROD ./config/emoClassify/prod/prod.listener.config.json ./config/emoClassify/prod/prod.trainer.config.json ./config/emoClassify/prod/prod.analyzer.config.json ./knowledge/config.yaml
+5. 키워드
+ - ./bootModule.sh start keyword-extraction-service
+6. 요약
+ - ./bootModule.sh start summarization-service
+7. 연관어
+ - ./bootModule.sh start related-keyword-extraction-service
+
+cd /sw/ta-home && ./bootModule.sh stop related-keyword-extraction-service && ./bootModule.sh start related-keyword-extraction-service 15220 && \n
+cd /sw/ta-home && ./bootModule.sh stop keyword-extraction-service && ./bootModule.sh start keyword-extraction-service 15200 &&
+
+main.py --config config.yaml
+
+
+
+### DEV-DB USER PASSWORD (패스워드 변경)
+
+# http://outbound.suhyup-bank.com/restful/pwdOffer
+
+# AES-256, 키는 "passwordencrypt123456789abcdefgh"
+
+
+POST http://129.10.18.148/restful/pwdOffer HTTP/1.1  #개발
+Content-Type: application/json
+
+{
+    "dbInfo": "TMORA_IPCDBT11_T",
+    "userId": "WISENUT"
+}
+
+
+POST http://129.10.10.172/restful/pwdOffer HTTP/1.1  #운영
+Content-Type: application/json
+
+{
+    "dbInfo": "TMORA_IPCDBP11_P",
+    "userId": "WISENUT"
+}
+
+
+사전반영 -> 뭔가싶은 뭔가
+
+
+
+TA 관리도구 아래 내용 확인해주세요 .. 
+
+ ## TA관리도구
+
+ - 컬렉션 > 문서업로드 : 오류 팝업에서 다운로드 버튼 처리 

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.batch.mapper.StopwordMapper">
+	
+    <!-- 금칙어 분석 - 시간별 -->
+    <insert id="doStopword" parameterType="hashMap">
+	    	INSERT /* kr.co.wisenut.textminer.batch.mapper.StopwordMapper.doStopword */
+			INTO   TB_WTM_IS_BS_STOPWORD (CALL_ID, RESULT_CD, KEYWORD, COUNT, DIC_TYPE)
+			SELECT k.CALL_ID  
+				 , '105200'
+				 , d.KEYWORD
+				 , SUM(k.COUNT) AS COUNT_NUM
+				 , #{dicType}
+			FROM   TB_WTM_IS_DICTIONARIES d
+			LEFT JOIN TB_WTM_IS_BS_KEYWORD k 
+				   ON d.KEYWORD  = k.KEYWORD
+			LEFT JOIN TB_WTM_IS_SESS s 
+				   ON s.CALL_ID = k.CALL_ID  
+			WHERE  d.DIC_TYPE = #{dicType}
+			  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{startTime}
+			  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{endTime}
+			GROUP BY d.KEYWORD, k.CALL_ID
+    </insert>
+    
+    <!-- 금칙어 당일데이터 삭제 -->
+	<delete id="deleteStopword" parameterType="hashMap">
+		DELETE /* kr.co.wisenut.textminer.batch.mapper.StopwordMapper.deleteStopword */
+		FROM   TB_WTM_IS_BS_STOPWORD
+		WHERE  CALL_ID IN (SELECT CALL_ID 
+						   FROM   TB_WTM_IS_SESS 
+						   WHERE  TO_CHAR(CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{startTime}
+							 AND  TO_CHAR(CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{endTime})
+	</delete>
+	
+</mapper>

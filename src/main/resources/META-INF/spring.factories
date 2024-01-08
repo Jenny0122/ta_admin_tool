@@ -1,0 +1,2 @@
+# Post Processor
+org.springframework.boot.env.EnvironmentPostProcessor=kr.co.wisenut.config.EncryptEnvPostProcessor

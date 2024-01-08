@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+
+<head>
+    <title>마이페이지</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>마이페이지</h2>
+                <!--소 제목 라인-->
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>마이페이지</li>
+                    <!--li><span>&gt;</span><strong>개인정보 변경</strong></li-->
+                </ul>
+            </div>
+
+
+            <!--개인정보 변경-->
+            <div class="cont_box mt0">
+                <h3>개인정보 변경</h3>
+                <div class="container">
+                    <form name="updateUserForm" onsubmit="return updateUser(this.querySelector('button[type=submit]'));">
+                        <div class="mt20">
+                            <label for="userid" class="mr100">아이디</label>
+                            <input name="userId" type="hidden" th:value="${userId}">
+                            <input name="userId" type="text" class="w200" id="userid" readonly th:value="${userId}"
+                                   disabled="disabled">
+                        </div>
+                        <div class="mt20">
+                            <label for="name" class="mr115">이름</label>
+                            <input name="userName" type="text" class="w200" id="name" required="required" th:value="${userName}"
+                                   th:data-name="${name}" placeholder="이름 입력 필수" readonly>
+                        </div>
+                        <div class="mt20">
+                            <label for="email" class="mr100">이메일</label>
+                            <input name="userEmail" type="email" class="w200" id="email" required="required" th:value="${userEmail}"
+                                   th:data-email="${email}" placeholder="이메일 입력 필수" readonly>
+                        </div>
+                        <div class="mt20">
+                            <label for="pre_password" class="mr87">비밀번호</label>
+                            <input name="password" type="password" id="pre_password" required="required" class="w200"
+                                   autocomplete="off" placeholder="기존 비밀번호 입력 필수" title="기존 비밀번호 입력 필수">
+                        </div>
+                        <div class="mt20">
+                            <label for="new_password" class="mr70">새 비밀번호</label>
+                            <input name="userPw" type="password" id="new_password" class="w200"
+                                   placeholder="새로운 비밀번호 설정" autocomplete="off"
+                                   title="특수문자를 최소 하나 포함한 8~16자리 영문 대 소문자, 숫자, 특수문자를 사용하세요."
+                                   pattern="^((?=.*[a-zA-Z0-9])(?=.*[^a-zA-Z0-9]).{8,16})$">
+                        </div>
+                        <div class="mt20">
+                            <label for="pre_passwordConfirm" class="mr40">새 비밀번호 확인</label>
+                            <input name="newPasswordConfirm" type="password" id="pre_passwordConfirm" class="w200"
+                                   placeholder="새로운 비밀번호 확인" autocomplete="off"
+                                   title="특수문자를 최소 하나 포함한 8~16자리 영문 대 소문자, 숫자, 특수문자를 사용하세요."
+                                   pattern="^((?=.*[a-zA-Z0-9])(?=.*[^a-zA-Z0-9]).{8,16})$">
+                        </div>
+                        <div class="mt20">
+                            <!--<input type="submit" class="btn btn_mint w350" id="save" value="저장">-->
+                            <button type="submit" class="btn btn_mint w350">저장</button>
+                        </div>
+                    </form>
+                </div>
+            </div><!--개인정보 변경-->
+
+
+            <!--<div class="cont_tit clearfix">-->
+                <!--<!--서버 연결 설정-->
+                <!--<div class="fL server_box w50">-->
+                    <!--<div class="cont_title">-->
+                        <!--<span class="titleLine"></span>-->
+                        <!--<h3>TM 서버 연결 설정</h3>-->
+                    <!--</div>-->
+                    <!--<div class="container">-->
+                        <!--<div class="mt20">-->
+                            <!--<label for="IP">IP</label>-->
+                            <!--<!-- <label class="w200 ml35" id="IP" th:text="${tmProperties.getCoreHost()}"></label> -->
+                            <!--<!--/*<input type="text" class="w200 ml35" id="IP" readonly th:value="${tmProperties.getCoreHost()}">*/-->
+                        <!--</div>-->
+                        <!--<div class="mt20">-->
+                            <!--<label for="PORT">포트</label>-->
+                            <!--<!-- <label class="w200 ml20 mr100" id="PORT" th:text="${tmProperties.getCorePort()}"></label> -->
+                            <!--<!--/*<input type="number" class="w200 ml20" id="PORT" readonly th:value="${tmProperties.getCorePort()}">*/-->
+
+                            <!--<input type="button" class="btn btn_mint w100 ml15" value="연결테스트"-->
+                            <!--       onclick="testTmServer(this, true);">-->
+                        <!--</div>-->
+                        <!--<!--/*<div class="mt20"><input type="button" class="btn btn_gray ml50" value="저장" style="padding: 0; width: 310px;"></div>*/-->
+                    <!--</div>-->
+                <!--</div>-->
+                <!--서버 연결 설정-->
+
+                <!--DB 서버 연결 설정-->
+                <!-- 
+                <div class="fR server_box w48_5">
+                    <h3>DB 서버 연결 설정</h3>
+                    <div class="container pb80">
+                        <div class="mt20">
+                            <label for="Mongo-IP">IP</label>
+                            <label class="w200 ml35" id="Mongo-IP" th:text="${mongoProperties.getHost()} ? ${mongoProperties.getHost()} : '127.0.0.1'"></label>
+                        </div>
+                        <div class="mt20">
+                            <label for="Mongo-PORT">포트</label>
+                            <label id="Mongo-PORT" class="ml20 mr100" th:text="${mongoProperties.getPort()}? ${mongoProperties.getPort()} : '27017'"></label>
+                            <input type="hidden"
+                                   th:value="${mongoProperties.getDatabase()}? ${mongoProperties.getDatabase()} : 'textminer'"
+                                   readonly/>
+                            <input type="button" class="btn btn_mint w100 ml15" value="연결테스트"
+                                   onclick="testMongoDb(this, true);">
+                        </div>
+                -->
+                        <!--div class="mt20">
+                            <input type="button" class="btn btn_gray ml50" value="저장" style="padding: 0; width: 310px;">
+                        </div-->
+                <!--
+                    </div>
+                </div>
+                -->
+                <!--DB 서버 연결 설정-->
+            </div>
+
+
+        </div>
+    </div>
+
+    <script type="text/javascript" th:src ="@{/mng/user/mypage.js}"></script>
+    <script type="text/javascript">
+    </script>
+
+</section>
+</body>
+
+</html>

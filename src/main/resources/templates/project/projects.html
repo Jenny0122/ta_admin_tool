@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+
+<head>
+    <title>프로젝트 리스트</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>프로젝트 관리</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>프로젝트</li>
+                    <li><span>&gt;</span><strong>프로젝트 관리</strong></li>
+                </ul>
+            </div>
+            
+            <div class="cont_box m0" style="margin-top: unset">
+            	<div class="container" style="height:50px;border-bottom:1px solid #dddddd">
+	            	<div class="statusTitle">
+	               		<span id="totalCount" style="font-size: 14pt; font-weight:500;"></span>
+	                </div> 
+	                <!-- 모듈 상태표시등 -->
+	                <div class="statusTraffic">
+	    				<table>
+	                        <colgroup>
+	                            <col width="120px;">
+	                            <col width="120px;">
+	                            <col width="120px;">
+	                            <col width="120px;">
+	                            <col width="120px;">
+							<colgroup>
+							<tr>
+								<th>자동분류</th>
+								<th>감성분석</th>
+								<th>키워드추출</th>
+								<th>연관어추출</th>
+								<th>문서요약</th>
+							<tr>
+							<tr id="trafficContent">
+							</tr>
+	    				</table>
+	    			</div>
+	                <!-- // 모듈 상태표시등 -->
+	    		</div>
+	    		
+                <div class="container">
+                    <div class="cont1 clearfix">
+                        <div class="fL">
+                            <select class="w270" id="divide" title="프로젝트 바로가기" onchange="fnDoList()">
+                                <option selected disabled hidden>프로젝트 선택</option>
+                                <option value="0">전체보기</option>
+                                <th:block th:each="project :${projects}">
+									<option th:text="${project.projectName}" th:value="${project.projectId}"
+											th:title="${project.creDt} + ' - ' + ${project.projectDesc}"></option>
+								</th:block>
+                            </select>
+                        </div>
+                        <div class="fR">
+                            <button type="button" class="btn btn_sky w98 ml5" onclick="showPopup('create', null);"><i
+                                    class="fas fa-plus mr5"></i> 추가
+                            </button>
+                        </div>
+                    </div>
+                    <!--프로젝트 table-->
+                    <table class="basic_tbl_type mt20 text-ellipsis">
+                        <colgroup>
+                            <col width="3%;">
+                            <col width="8%;">
+                            <col width="9%;">
+                            <col width="6%;">
+                            <col width="12%;">
+                            <col width="18%;">
+                            <col width="8%;">
+                            <col width="6%;">
+                            <col width="*;">
+                            <col width="5%;">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>프로젝트명</th>
+                            <th>설명</th>
+                            <th>서비스구분</th>
+                            <th>서비스명</th>
+                            <th>모델명</th>
+                            <th>최근분석일</th>
+                            <th>모델상태</th>
+                            <th>생성/분석/결과</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        
+						<div id="listArea"></div>
+                        
+                        <tbody id="project_table_body">
+                        </tbody>
+                    </table>
+                    <!--프로젝트 table end -->
+                </div>
+                <!-- container end-->
+            </div>
+            <!-- cont_box end -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+    <!-- cont_wrap end-->
+
+    <!-- 프로젝트 추가 팝업-->
+    <div id="create_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall">
+            <div class="top clearfix">
+                <h3 class="fL">프로젝트 추가</h3>
+                <a href="#" class="close_create close fR" onclick="hidePopup('create');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+
+            <form onsubmit="return createProject();">
+                <div class="pop_container">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+                            <div>
+                                <label for="proj_name">프로젝트명</label>
+                                <input type="text" class="w230" id="proj_name" name="projectName" required="required" maxlength="20"
+                                       placeholder="예시) 프로젝트1">
+                            </div>
+                            <div class="mt20">
+                                <label for="proj_comment">설명</label>
+                                <textarea rows="6" class="w230" id="proj_comment" name="projectDesc" required="required" maxlength="1000"
+                                          placeholder="예시) 테스트용 프로젝트"></textarea>
+                            </div>
+                            <p class="comment"> * 프로젝트명, 설명은 필수 입력 항목입니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98" onclick="trimInputFields()"> 완료</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    <!--프로젝트 추가 팝업 end-->
+
+    <!-- 프로젝트 수정 팝업-->
+    <div id="update_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall">
+            <div class="top clearfix">
+                <h3 class="fL">프로젝트 수정</h3>
+                <a href="#" class="close_update close fR" onclick="hidePopup('update');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+
+            <form onsubmit="return updateProject();">
+                <div class="pop_container">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+                            <div>
+                                <label for="proj_nameUP">프로젝트명</label>
+                                <input type="hidden" name="projectId">
+                                <input type="text" class="w230" id="proj_nameUP" name="projectName" required="required" maxlength="20"
+                                       placeholder="예시) Proj1">
+                            </div>
+                            <div class="mt20">
+                                <label for="proj_commentUP">설명</label>
+                                <textarea rows="6" class="w230" id="proj_commentUP" name="projectDesc" required="required" maxlength="1000"
+                                          placeholder="예시) 테스트용 프로젝트"></textarea>
+                            </div>
+                            <p class="comment"> * 프로젝트명, 설명은 필수 입력 항목입니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98" onclick="trimInputFields()">완료</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!--프로젝트 수정 팝업 end-->
+
+    <!-- 모델 분석 팝업-->
+    <div id="analyze_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall">
+            <div class="top clearfix">
+                <h3 class="fL">모델 분석</h3>
+                <a href="#" class="close_update close fR" onclick="hidePopup('analyze');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+
+            <form>
+                <div class="pop_container" style="height:170px">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+                            <div>
+                                <label for="proj_commentUP">분석 컬렉션</label>
+								<input type="hidden" name="projectId">
+								<input type="hidden" name="taskId">
+								<input type="hidden" name="taskType">
+                                <select name="analyzeCollection" class="w255">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pop_bottom align_c">
+                    <button type="button" class="btn btn_blue w98" onclick="analyzeModel()">분석 시작</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!--모델 분석 팝업 end-->
+
+    <script type="text/javascript" th:src ="@{/mng/project/projects.js}"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            // 사용성 - table tr 에 click 이벤트 등록
+            radioByTableRowClick("tr[class^=project-]");
+
+            // 프로젝트 상태 업데이트
+            //refreshTaskStatus();
+            /*const statusCheckInterval = setInterval(function asyncImportStatusCheck() {
+                refreshTaskStatus();
+            }, 5000);
+            setTimeout(clearInterval(statusCheckInterval), 60 * 3);*/
+
+        });
+
+    </script>
+</section>
+
+</body>
+
+</html>

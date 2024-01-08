@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.collection.mapper.DocumentMapper">
+	
+	<resultMap id="documentListForFileMap" type="hashmap">
+		<result property="documentContent" column="documentContent" jdbcType="CLOB" javaType="java.lang.String" />
+		<result property="docid" column="DOCID" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="label" column="LABEL" jdbcType="CLOB" javaType="java.lang.String" />
+		<result property="content" column="CONTENT" jdbcType="CLOB" javaType="java.lang.String" />
+	</resultMap>
+	
+	<!-- 컬렉션 문서 조회 -->
+	<select id="getDocumentList" parameterType="hashmap" resultMap="documentListForFileMap">
+		SELECT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.getDocumentList */
+			   *
+		FROM   <include refid="selectTable"></include>
+	</select>
+	
+	<!-- 컬렉션 문서 건수 조회 -->
+	<select id="getDocumentListCount" parameterType="hashmap" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.getDocumentListCount */
+			   COUNT(*)
+		FROM   <include refid="selectTable"></include>
+	</select>
+	
+	<!-- 컬렉션 문서 조회(파일생성용) -->
+	<select id="getDocumentListForFile" parameterType="hashmap" resultMap="documentListForFileMap">
+		SELECT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.getDocumentListForFile */
+			   /* DBMS_LOB.SUBSTR(DOCUMENT_CONTENT, DBMS_LOB.GETLENGTH(DOCUMENT_CONTENT)) AS "documentContent" */
+			   DOCUMENT_CONTENT AS "documentContent"
+		FROM   WISETM_DOCUMENTS
+		WHERE  COLLECTION_ID = #{collectionId}
+	</select>
+	
+	<!-- 컬렉션 문서 상세조회 -->
+	<select id="getDocumentDetail" parameterType="hashmap" resultMap="documentListForFileMap">
+		SELECT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.getDocumentDetail */
+			   *
+		FROM  <include refid="selectTable"></include>
+		WHERE  DOCID = #{docId}
+	</select>
+	
+	<!-- 전일 기준, 분류되지 않은 CALL_ID 리스트 가져오기 -->
+	<select id="getNotClsCallIdList" resultType="String">
+		SELECT /* kr.co.wisenut.textminer.collection.mapper.CollectionMapper.getNotClsCallIdList */
+			   DISTINCT TWIS.CALL_ID
+		FROM   TB_WTM_IS_SESS TWIS
+		LEFT OUTER JOIN TB_WTM_IS_BS_CLASS TWIBC
+					 ON TWIBC.CALL_ID = TWIS.CALL_ID
+					AND TWIBC.CLS_FLAG = '1'
+		WHERE  1 = 1
+		  AND  TO_CHAR(TWIS.ANA_COMP_DT, 'YYYYMMDD') BETWEEN #{startDate} AND #{endDate}	/* 조회일자 */
+		  AND  INOUT_SC_CD = 'I'			/* 인바운드만 해당 */
+		  AND  TWIBC.RESULT_CD = '102500'	/* 분류없음 */
+		ORDER BY TWIS.CALL_ID
+	</select>
+	
+	<!-- 컬렉션 문서 등록(파일 업로드) -->
+	<insert id="insertDocument" parameterType="hashmap">
+		<selectKey resultType="int" keyProperty="documentId" order="BEFORE">
+			SELECT COALESCE(MAX(DOCUMENT_ID), 0) + 1
+			FROM   WISETM_DOCUMENTS
+			WHERE  COLLECTION_ID = #{collectionId}
+		</selectKey>
+		
+		INSERT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.insertDocument */
+		INTO   WISETM_DOCUMENTS
+		VALUES ( #{documentId}
+			   , #{collectionId}
+			   , #{documentContent}
+			   )
+	</insert>
+	
+	<!-- 컬렉션 문서 변경 -->
+	<update id="updateDocument" parameterType="hashmap">
+		UPDATE /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.updateDocument */
+			   WISETM_DOCUMENTS
+		SET    DOCUMENT_CONTENT = #{documentContent}
+		WHERE  DOCUMENT_ID = ( SELECT DOCUMENT_ID 
+							   FROM   WISETM_DOCUMENTS 
+							   WHERE  JSON_VALUE(DOCUMENT_CONTENT, '$.docid') = #{docId}
+							     AND  COLLECTION_ID = #{collectionId})
+		  AND  COLLECTION_ID = #{collectionId}
+	</update>
+	
+	<!-- 컬렉션 문서 삭제(컬렉션 삭제 시 호출) -->
+	<delete id="deleteDocument" parameterType="int">
+		DELETE /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.deleteDocument */
+		FROM   WISETM_DOCUMENTS
+		WHERE  COLLECTION_ID = #{collectionId}
+	</delete>
+	
+	<!-- JSON 테이블(조회) -->
+	<sql id="selectTable">
+		JSON_TABLE (
+			( SELECT JSON_ARRAYAGG(DOCUMENT_CONTENT RETURNING CLOB) AS DOCUMENT_CONTENT
+			  FROM ( SELECT TMP.*
+						  , CEIL( TMP.SEQ / 10 ) AS PAGE_ROW
+					 FROM ( SELECT ROWNUM AS SEQ
+								 , DOCUMENT_ID
+								 , COLLECTION_ID
+								 , DOCUMENT_CONTENT
+							FROM   WISETM_DOCUMENTS WTD
+							WHERE  COLLECTION_ID = #{collectionId}
+		<if test='searchPattern != "" and searchPattern != null'>
+							  AND  DOCUMENT_CONTENT LIKE '%'||#{searchPattern}||'%'
+		</if>
+							ORDER BY DOCUMENT_ID
+						  ) TMP
+				   ) TOTAL
+			  WHERE  1 = 1
+		<if test='pageRow != null and pageRow != ""'>
+			<if test='queryType=="LIST"'>
+			    AND  PAGE_ROW = #{pageRow}
+			</if>
+		</if>
+			), '$[*]' COLUMNS( ${documentField} )
+		) T
+	</sql>
+</mapper>

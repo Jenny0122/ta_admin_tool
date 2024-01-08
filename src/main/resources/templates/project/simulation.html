@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+
+<head>
+	<link rel="stylesheet" type="text/css" th:href="@{/css/simulation.css}">
+    <title>시뮬레이션</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>시뮬레이션</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>프로젝트</li>
+                    <li><span>&gt;</span><strong>시뮬레이션</strong></li>
+                </ul>
+            </div>
+            <div class="cont_box m0" style="margin-top: unset">
+                <div class="container">
+                    <!--시뮬레이션 table-->
+                    <table class="basic_tbl_type mt20 text-ellipsis">
+                        <colgroup>
+                            <col width="20%;">
+                            <col width="20%;">
+                            <col width="30%;">
+                            <col width="*;">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th>프로젝트</th>
+                            <th>프로젝트 설명</th>
+                            <th>서비스 모델</th>
+                            <th>서비스 구분</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        
+						<div id="listArea"></div>
+                        
+                        <tbody id="project_table_body">
+						<tr class="collection">
+							<td id="project_name">
+								<select class="w270" id="project_list" title="프로젝트 선택" onchange="fnDoModelList()">
+	                                <option selected disabled hidden>프로젝트 선택</option>
+	                                <th:block th:each="project :${projects}">
+										<option th:text="${project.projectName}" th:value="${project.projectId}"
+												th:title="${project.creDt} + ' - ' + ${project.projectDesc}"></option>
+									</th:block>
+                            	</select>
+							</td>
+							<td id="project_desc"></td>
+							<td id="model_list"></td>
+							<td id="model_desc"></td>
+							<td>
+								<button type="button" class="btn btn_blue w110" onclick="callSimulation()"><i class="fas fa-folder-open"></i>분석요청</button>
+							</td>
+						</tr>
+                        </tbody>
+                    </table>
+                    <!-- 시뮬레이션 table end -->
+                    
+                    <!-- 분석 요청 -->
+                    <div class="cont1 clearfix mt15 pl10">
+						<h3>분석</h3>
+						
+						<!-- Classifier 임계값 설정 -->
+						<table id="threshold" style="width:95%;margin:10px 0 0 25px;">
+							<colgroup>
+	                            <col width="10%;">
+	                            <col width="10%;">
+	                            <col width="10%;">
+	                            <col width="*;">
+	                        </colgroup>
+							<tr align="left">
+                    			<th>임계치 옵션</th>
+                    			<td>
+                    				<select class="w150" id="thresholdOption" title="임계치 옵션 선택">
+										<option value="">사용 안 함</option>
+										<option value="hard" selected>hard</option>
+										<!-- <option value="soft">soft</option> // 사용 안함 -->
+                            		</select>
+                    			</td>
+                    			<th>임계값</th>
+                    			<td>
+                    				<input type="number" id="thresholdValue" value="0.0" step="0.01" min="0.0" max="1.0">
+                    			</td>
+                    		</tr>
+						</table>
+						
+						<!-- 전처리 설정 -->
+						<table id="preprocess" style="width:95%;margin:10px 0 0 25px;">
+							<colgroup>
+	                            <col width="6%;">
+	                            <col width="5%;">
+	                            <col width="6%;">
+	                            <col width="5%;">
+	                            <col width="6%;">
+	                            <col width="5%;">
+	                            <col width="6%;">
+	                            <col width="5%;">
+	                            <col width="6%;">
+	                            <col width="5%;">
+	                            <col width="6%;">
+	                            <col width="5%;">
+	                        </colgroup>
+							<tr align="left">
+                    			<th>불용어절 제거</th>
+                    			<td>
+                    				<select class="w80" id="apply_black_words_removal" title="불용어절 제거">
+										<option value="true" selected>true</option>
+										<option value="false">false</option>
+                            		</select>
+                    			</td>
+                    			<th>불용패턴 제거</th>
+                    			<td>
+                    				<select class="w80" id="apply_pattern_removal" title="불용패턴 제거">
+										<option value="true" selected>true</option>
+										<option value="false">false</option>
+                            		</select>
+                    			</td>
+                    			<th>문장 분리</th>
+                    			<td>
+                    				<select class="w80" id="apply_sentence_separation" title="문장 분리">
+										<option value="true" selected>true</option>
+										<option value="false">false</option>
+                            		</select>
+                    			</td>
+                    			<th>띄어쓰기 교정</th>
+                    			<td>
+                    				<select class="w80" id="apply_spacing_correction" title="띄어쓰기 교정">
+										<option value="true" selected>true</option>
+										<option value="false">false</option>
+                            		</select>
+                    			</td>
+                    			<th>발화 결합</th>
+                    			<td>
+                    				<select class="w80" id="apply_speaker_combination" title="발화 결합">
+										<option value="true" selected>true</option>
+										<option value="false">false</option>
+                            		</select>
+                    			</td>
+                    			<th>문장분리 어절 적용</th>
+                    			<td>
+                    				<select class="w80" id="apply_split_sentence_word" title="문장분리 어절 적용">
+										<option value="true" selected>true</option>
+										<option value="false">false</option>
+                            		</select>
+                    			</td>
+                    		</tr>
+						</table>
+						
+						<!-- Summarization 설정 -->
+						<table id="summary" style="width:95%;margin:10px 0 0 25px;">
+							<colgroup>
+	                            <col width="10%;">
+	                            <col width="*;">
+	                        </colgroup>
+							<tr align="left">
+                    			<th>전처리 적용여부</th>
+                    			<td>
+                    				<select class="w150" id="preprocessOption" title="전처리 적용여부">
+										<option value="Y">Y</option>
+										<option value="N" selected>N</option>
+                            		</select>
+                    			</td>
+                    		</tr>
+						</table>
+						
+						<table style="width:95%;margin: 10px 0 0 25px;">
+							<colgroup>
+	                            <col width="50%;">
+	                            <col width="50;">
+	                        </colgroup>
+							<tr align="left">
+								<th>
+									문장입력
+									<span id="preprocessingGuideText" style="color:red;"> 
+										( 전처리 발화구분 <i class="fas fa-arrow-right"></i> (TX) : 상담사 / (RX) : 고객 )
+									<span>
+								</th>
+								<th>분석결과</th>
+							</tr>
+							<tr>
+								<td>
+									<textarea id="simulationText" style="width: 100%; height: 500px"></textarea>
+								</td>
+								<td>
+									<textarea id="resultArea" style="width: 100%; height: 500px" disabled></textarea>
+								</td>
+							</tr>
+						</table>
+					</div>
+                    <!-- // 분석 요청 -->
+                </div>
+                <!-- container end-->
+            </div>
+            <!-- cont_box end -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+    <!-- cont_wrap end-->
+
+    <script type="text/javascript" th:src ="@{/mng/project/simulation.js}"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // 프로젝트 상태 업데이트
+            //refreshTaskStatus();
+            /*const statusCheckInterval = setInterval(function asyncImportStatusCheck() {
+                refreshTaskStatus();
+            }, 5000);
+            setTimeout(clearInterval(statusCheckInterval), 60 * 3);*/
+
+        });
+
+    </script>
+</section>
+
+</body>
+
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible"/>
+
+    <th:block th:replace="fragments/head"></th:block>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/login.css}">
+    <title>회원가입</title>
+</head>
+<body>
+
+<div th:if="${mongoConnectionFailed}" id="db-conn-error" style="display: none">
+    MongoDB Connection Failed.
+</div>
+
+<div class="wrap">
+    <form id="registerForm" method="post" onsubmit="return registerUser();">
+		<input type="hidden" name="jobDiv" value="1"/>
+        <div class="login_box join">
+            <h1><a href="#"><img src="/img/textminer_su.png" width="250" , height=auto></a></h1>
+
+            <ul class="login clearfix">
+                <li><i class="fas fa-user-circle" aria-hidden="true"></i><input type="text" name="userId"
+                                                                                required="required" placeholder="아이디"
+                                                                                title="4~24자 영문 대 소문자, 숫자를 사용하세요"
+                                                                                pattern="^[0-9a-zA-Z]{4,24}$">
+                </li>
+                <li><i class="fas fa-user-circle" aria-hidden="true"></i><input type="text" name="userName"
+                                                                                required="required" placeholder="이름">
+                </li>
+                <li><i class="fas fa-envelope" aria-hidden="true"></i><input type="email" name="userEmail" placeholder="이메일" required="required">
+                </li>
+                <li class="pw fL"><i class="fas fa-lock" aria-hidden="true"></i>
+                    <input type="password" name="userPw" required="required" autocomplete="off" placeholder="비밀번호"
+                           title="특수문자를 최소 하나 포함한 8~16자리 영문 대 소문자, 숫자, 특수문자를 사용하세요."
+                           pattern="^((?=.*[a-zA-Z0-9])(?=.*[^a-zA-Z0-9]).{8,16})$">
+                </li>
+                <li class="re_pw fR">
+                    <input type="password" name="passwordConfirm" required="required" autocomplete="off" placeholder="비밀번호 확인">
+                </li>
+            </ul>
+            <p class="comment"> * 아이디, 이름, 이메일, 비밀번호는 필수 입력 항목입니다.</p>
+
+            <a href="#" class="join on" onclick="return registerUser();">회원등록</a>
+            <a href="/login" class="login on mt40 mb40">로그인</a>
+        </div>
+    </form>
+</div>
+</body>
+<script type="text/javascript">
+
+	/*
+    if (document.getElementById("db-conn-error")) {
+        console.debug(document.getElementById("db-conn-error").innerText);
+        alert("데이터베이스 연결에 실패했습니다. 문제가 계속 될 경우 관리자에게 문의 바랍니다.");
+    }
+    */
+
+    /**
+     * 회원가입 진행
+     * @returns {boolean}coa
+     */
+    const registerUser = function registerNewTextMinerUser() {
+
+        if (!isValidUserInfo()) {
+            console.warn('There are invalid userInfo.');
+            return false;
+        }
+
+        let $registerForm = $('#registerForm');
+
+        $.ajax({
+            type: "POST",
+            url: `/user/register`,
+            data: $registerForm.serialize(), //default contentType: 'application/x-www-form-urlencoded'
+            beforeSend: function () {
+                //TODO(wisnt65) encrypt username, password
+
+                for (let requiredInput of [...document.querySelectorAll("#registerForm input[required]")]) {
+                    if (!requiredInput.value) {
+                        alert(`${requiredInput.placeholder}을 입력해주세요`);
+                        requiredInput.focus();
+                        throw "required parameter missing"; // do not submit
+                    }
+                }
+            },
+            success: function (data) {
+				
+				if (data.result == 'S') {
+	                alert(data.resultMsg);
+	                location.href = '/login';
+                } else {
+	                alert(data.resultMsg);
+	                return false;
+				}
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                alert("회원가입 실패. 서버 연결 상태 및 로그를 확인하세요.");
+            }
+        });
+
+        return false;
+    };
+
+    /**
+     * 회원가입 폼 검증.
+     */
+    const isValidUserInfo = function validateUserInfoInRegisterForm() {
+
+        const username = document.querySelector('#registerForm input[name=userId]');
+
+        const regexId = /^[0-9a-zA-Z]{4,24}$/;
+        if (!regexId.test(username.value)) {
+            alert("아이디는 4~24자 영문 대 소문자, 숫자를 사용하세요.");
+            username.focus();
+            return false;
+        }
+
+        const password = document.querySelector('#registerForm input[name=userPw]');
+
+        if (!password.value) {
+            alert("비밀번호를 입력해주세요");
+            password.focus();
+            return false;
+        }
+
+        const regexPw = /^((?=.*[a-zA-Z0-9])(?=.*[^a-zA-Z0-9]).{8,16})$/;
+        if (!regexPw.test(password.value)) {
+            alert("비밀번호는 특수문자를 최소 하나 포함한 8~16자리 영문 대 소문자, 숫자, 특수문자를 사용하세요.");
+            password.focus();
+            return false;
+        }
+
+        const passwordConfirm = document.querySelector('#registerForm input[name=passwordConfirm]');
+
+        if (password.value != passwordConfirm.value) {
+            alert("비밀번호가 일치하지 않습니다.");
+            passwordConfirm.focus();
+            return false;
+        }
+
+        const email = document.querySelector('#registerForm input[name=userEmail]');
+
+        if (!email.value) {
+            alert("이메일을 입력해주세요");
+            email.focus();
+            return false;
+        }
+
+        const regexPseudoEmail = /^\S+@\S+\.\S+$/;
+        if (!regexPseudoEmail.test(email.value)) {
+            alert("이메일이 올바르지 않습니다.");
+            email.focus();
+            return false;
+        }
+
+        return true;
+    };
+
+</script>
+</html>

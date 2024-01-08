@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org" layout:decorate="~{template}">
+
+<head>
+	<title>컬렉션 리스트</title>
+</head>
+
+<body>
+	<section layout:fragment="content">
+		<div class="cont_wrap">
+			<div class="cont_area log">
+				<div class="cont_tit clearfix">
+					<h2>컬렉션 정보</h2>
+					<ul class="location">
+						<li><i class="fas fa-home"></i><span>&gt;</span></li>
+						<li>컬렉션</li>
+						<li><span>&gt;</span><strong>컬렉션 정보</strong></li>
+					</ul>
+				</div>
+				<div class="cont_box m0" style="margin-top: unset">
+					<h3 id="totalCount"></h3>
+					<div class="container">
+						<div class="cont1 clearfix">
+							<div class="fL">
+								<!--<label class="ml15" for="show">show</label>-->
+								<!--<input type="number" class="w65 ml10" id="show" value="10" step="10" min="10" max="100">-->
+
+								<select name="size" class="w65 ml10" id="show" onchange="fnDoList(1)">
+									<option value="10" selected="selected">10</option>
+									<option value="20">20</option>
+									<option value="50">50</option>
+								</select>
+								<label for="show" class="ml10">개 보기</label>
+							</div>
+							<div class="fR">
+								<button type="button" class="btn btn_sky w98 ml5" onclick="showPopup('create', '');"><i
+										class="fas fa-plus mr5"></i> 추가
+								</button>
+								<button type="button" class="btn btn_sky w98 ml5" onclick="showPopup('update', '');"><i
+										class="fas fa-edit  mr5"></i> 수정
+								</button>
+								<button type="button" name="delete" class="btn btn_red w98 ml5"
+									onclick="deleteCollection();">
+									<i class="fas fa-trash-alt  mr5"></i> 삭제
+								</button>
+								<button type="button" class="btn btn_mint w98 ml5" id="upload"
+									onclick="uploadCollection();"><i class="fas fa-file-upload  mr5"></i> 업로드
+								</button>
+								<button type="button" class="btn btn_mint w98 ml5" id="download"
+									onclick="showPopup('download', '');"><i class="fas fa-file-download  mr5"></i> 다운로드
+								</button>
+								<button type="button" class="btn btn_green w108 ml5" id="download"
+									onclick="sampleDownload('collection','csv')"><i class="fas fa-file-download  mr5"></i>샘플(CSV)
+								</button>
+								<button type="button" class="btn btn_green w108 ml5" id="download"
+									onclick="sampleDownload('collection','json')"><i class="fas fa-file-download  mr5"></i>샘플(JSON)
+								</button>
+								<button type="button" class="btn btn_green w125 ml5" id="download"
+									onclick="showPopup('download', 'N');"><i class="fas fa-file-download  mr5"></i>미분류 데이터
+								</button>
+							</div>
+						</div>
+						
+						<div id="listArea"></div>
+						
+						<!--컬렉션 정보 table-->
+						<table id="dataTable" class="basic_tbl_type mt20 text-ellipsis">
+							<colgroup>
+								<col width="3%;">
+								<col width="5%;">
+								<col width="10%;">
+								<col width="5%;">
+								<col width="5%;">
+								<col width="*;">
+								<col width="6%;">
+								<col width="9%;">
+							</colgroup>
+							<thead>
+								<th>선택</th>
+								<th>NO.</th>
+								<th>컬렉션 명</th>
+								<th>컬렉션 구분</th>
+								<th>작업구분</th>
+								<th>설명</th>
+								<th>문서수</th>
+								<th>생성날짜</th>
+							</thead>
+							<tbody>
+								<tr>
+									<td colspan="8">생성된 컬렉션이 없습니다. 컬렉션을 생성해주세요.</td>
+								</tr>
+							</tbody>
+						</table>
+						<!--컬렉션 정보 table end-->
+						
+						<!--컬렉션 정보 pagination-->
+						<div id="pageNav" class="page_btn_num clear_both">
+						</div>
+						<!--컬렉션 정보 pagination end-->
+						
+					</div>
+					<!-- container end-->
+				</div>
+				<!-- cont_box end -->
+			</div>
+			<!-- cont_area end-->
+		</div>
+		<!-- cont_wrap End-->
+
+		<!--컬렉션 추가 팝업-->
+		<div id="create_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+			<div class="bg"></div>
+
+			<div class="pop_box xsmall">
+				<!--컬렉션 추가 팝업 top-->
+				<div class="top clearfix">
+					<h3 class="fL">컬렉션 추가</h3>
+					<a href="#" class="close_create close fR" onclick="hidePopup('create');"><i
+							class="fas fa-times"></i></a>
+				</div>
+				<!--컬렉션 추가 팝업 top end-->
+
+				<form onsubmit="return createCollection();">
+					<!--컬렉션 추가 팝업 내용-->
+					<div class="pop_container large">
+						<div class="cont_box m0">
+							<div class="cont1 clearfix">
+								<div>
+									<label for="name">컬렉션 명</label>
+									<input type="text" class="w230" id="collectionName" name="collectionName" required="required" autofocus
+										maxlength="20" placeholder="예시) 컬렉션1">
+								</div>
+								<div class="mt20">
+									<label for="name">컬렉션 구분</label>
+									<select id="collectionType" name="collectionType" class="w230">
+										<option value="CLASSIFICATION">분류</option>
+										<option value="EMOTION">감성</option>
+									</select>
+								</div>
+								<div class="mt20">
+									<label for="name">작업 구분</label>
+									<select id="collectionJob" name="collectionJob" class="w230">
+										<option value="ANALYSIS">분석</option>
+										<option value="TRAINING">학습</option>
+									</select>
+								</div>
+								<div class="mt20">
+									<label for="name_comment">설명</label>
+									<textarea rows="6" class="w230" id="name_comment" name="collectionDesc" required="required"
+										maxlength="1000" placeholder="예시) 뉴스 데이터 분석용 컬렉션"></textarea>
+								</div>
+								<div class="mt20">
+									<p class="comment"> * 컬렉션 명, 설명은 필수 입력 항목입니다.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--컬렉션 추가 팝업 내용 end-->
+
+					<!--컬렉션 추가 footer-->
+					<div class="pop_bottom align_c">
+						<button type="submit" class="btn btn_blue w98" onclick="trimInputFields()">완료</button>
+					</div>
+					<!--칼렉션 생성 footer end-->
+
+				</form>
+			</div>
+		</div>
+		<!--컬렉션 추가 팝업 end-->
+
+		<!-- 컬렉션 수정 팝업-->
+		<div id="update_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+			<div class="bg"></div>
+			<div class="pop_box xsmall">
+
+				<!--컬렉션 수정 top-->
+				<div class="top clearfix">
+					<h3 class="fL">컬렉션 수정</h3>
+					<a href="#" class="close_update close fR" onclick="hidePopup('update');"><i
+							class="fas fa-times"></i></a>
+				</div>
+				<!--컬렉션 수정 top end-->
+
+				<form onsubmit="return updateCollection();">
+					<!--컬렉션 수정 내용-->
+					<div class="pop_container large">
+						<div class="cont_box m0">
+							<div class="cont1 clearfix">
+								<div>
+									<label for="nameUP">컬렉션 명</label>
+									<input type="hidden" name="collectionId">
+									<input type="text" class="w230" id="nameUP" name="collectionName" required="required"
+										autofocus="autofocus" maxlength="20" placeholder="예시) 컬렉션1">
+								</div>
+								<div class="mt20">
+									<label for="name">컬렉션 구분</label>
+									<select id="collectionTypeUp" name="collectionType" class="w230">
+										<option value="CLASSIFICATION">분류</option>
+										<option value="EMOTION">감성</option>
+									</select>
+								</div>
+								<div class="mt20">
+									<label for="name">작업 구분</label>
+									<select id="collectionJobUp" name="collectionJob" class="w230">
+										<option value="ANALYSIS">분석</option>
+										<option value="TRAINING">학습</option>
+									</select>
+								</div>
+								<div class="mt20">
+									<label for="name_commentUP">설명</label>
+									<textarea rows="6" class="w230" id="name_commentUP" name="collectionDesc" required="required"
+										maxlength="1000" placeholder="예시) 뉴스 데이터 분석용 컬렉션"></textarea>
+								</div>
+								<div class="mt20">
+									<p class="comment"> * 컬렉션 명, 설명은 필수 입력 항목입니다.</p>
+								</div>
+								<!--/*<div class="mt20">
+                                <label for="field_nameUP">권한</label>
+                                <select id="field_nameUP" name="authority" class="w230">
+                                    <option value="PUBLIC">공용</option>
+                                    <option value="PRIVATE" selected="selected">개인</option>
+                                </select>
+                            </div>*/-->
+								<!--/*<div class="mt20">
+                                <label for="extract_nameUP">구분</label>
+                                <select id="extract_nameUP" name="collectionType" required="required" class="w230">
+                                    <option value="" selected disabled>구분을 선택하세요</option>
+                                    <option value="TRAIN">모델 생성</option>
+                                    <option value="ANALYSIS">분석</option>
+                                </select>
+                            </div>*/-->
+							</div>
+						</div>
+					</div>
+					<!--컬렉션 수정 내용 end-->
+
+					<!--컬렉션 수정 footer end-->
+					<div class="pop_bottom align_c">
+						<button type="submit" class="btn btn_blue w98" onclick="trimInputFields()">완료</button>
+					</div>
+					<!--컬렉션 수정 footer end-->
+
+				</form>
+			</div>
+		</div>
+		<!--컬렉션 수정 팝업 end-->
+
+		<!-- 컬렉션 다운로드 팝업-->
+		<div id="download_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+			<div class="bg"></div>
+			<div class="pop_box xsmall">
+				<!--컬렉션 다운로드 Top-->
+				<div class="top clearfix">
+					<h3 id="downloadPopTitle" class="fL">컬렉션 다운로드</h3>
+					<a href="#" class="close_download close fR" onclick="hidePopup('download');"><i
+							class="fas fa-times"></i></a>
+				</div>
+				<!--컬렉션 다운로드 Top end-->
+
+				<!--컬렉션 다운로드 내용-->
+				<div class="pop_container" style="height: 240px;">
+					<div class="cont_box m0">
+						<div class="cont1 clearfix">
+							<div id="selectDateRange" class="mt5">
+								<label style="width: 90px" for="field_type">날짜 선택</label>
+								<input id="dateRange" type="text" name="dateRange" style="margin-left: 16px">
+							</div>
+							<div class="mt20">
+								<label style="width: 90px" for="field_type">파일 유형 선택</label>
+								<select id="field_type" name="export_format" required="required" class="w200" autofocus style="margin-left: 16px">
+									<option value="" selected disabled>유형을 선택하세요</option>
+									<option value="CSV">CSV</option>
+									<option value="JSON">JSON</option>
+								</select>
+							</div>
+							<div class="mt20">
+								<label style="width: 90px" for="progress">진행 상태</label>
+								<span id="progress-span" class="w200 " style="margin-left: 16px">요청 대기중
+								</span>
+							</div>
+							<!--/*<div class="mt20">
+                            <label style="width: auto" for="download_path">다운로드 경로</label>
+                            <input type="text" class="w200 ml20" id="download_path">
+                            <input type="button" class="fR w65 btn btn_gray" id="path" value="경로" style="padding: 0">
+                        </div>*/-->
+
+						</div>
+					</div>
+				</div>
+				<!--컬렉션 다운로드 내용 end-->
+
+				<!--컬렉션 다운로드 footer-->
+				<div class="pop_bottom align_c">
+					<button id="exportCollBtn" type="button" class="btn btn_blue w98"
+						onclick="requestExport(document.querySelector('input[type=radio][name=coll_choice]:checked').value, document.querySelector('#download_pop select[name=export_format]').value)">
+						<!--<i class="fas fa-file-download"></i>-->다운로드
+					</button>
+					<button id="exportNClsBtn" type="button" class="btn btn_blue w98"
+						onclick="downloadNotClsData(document.querySelector('input[name=dateRange]').value, document.querySelector('#download_pop select[name=export_format]').value)">
+						<!--<i class="fas fa-file-download"></i>-->다운로드
+					</button>
+				</div>
+				<!--컬렉션 다운로드 footer end-->
+			</div>
+		</div>
+		<!--컬렉션 다운로드 팝업 end-->
+
+		<style type="text/css">
+			tbody tr td.coll-size,
+			td.coll-count {
+				text-align: right;
+			}
+		</style>
+		<script type="text/javascript" th:src="@{/mng/collection/collections.js}"></script>
+   		<script type="text/javascript" th:src ="@{/js/datepicker/moment.min.js}"></script>
+   		<script type="text/javascript" th:src ="@{/js/datepicker/daterangepicker.min.js}"></script>
+		<script type="text/javascript">
+			// document loading 이 끝난 후
+			document.addEventListener("DOMContentLoaded", function () {
+
+				// byte (Number) --> KB, MB, GB ... (String)
+				[...document.querySelectorAll("td.coll-size")].forEach(tdElement => {
+					tdElement.innerText = get_file_size(tdElement.dataset.size);
+				});
+
+				// 사용성 - table tr 에 click 이벤트 등록
+				radioByTableRowClick();
+
+				// 컬렉션 > 문서 업로드 상태 업데이트 (추후 사용)
+				// refreshUploadStatus();
+			});
+		</script>
+
+	</section>
+</body>
+
+</html>

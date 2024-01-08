@@ -1,0 +1,212 @@
+<header th:fragment="header">
+    <div class="header_wrap">
+        <div class="sub_wrap"></div>
+        <div class="header clearfix">
+            <h1 class="fL">
+            	<a th:href="@{/}" style="text-decoration:none;">
+            		<!-- <img th:src="@{/img/textminer.png}" width="150" height=auto> -->
+					<span style="font-weight:900;color:#191d69;font-size:19pt;">WISE</span>
+					<span style="font-weight:900;color:#f5a100;font-size:19pt;letter-spacing:-2.5px;">TextAnalyzer</span>
+            	</a>
+            </h1>
+            <div class="gnb_wrap clearfix">
+                <!--div class="gnb gnb01"><a id="gnb-dashboard" href="/dashboard">대시보드</a></div-->
+                <div class="gnb gnb04"><a id="gnb-project" th:href="@{/project}">프로젝트</a></div>
+                <div class="gnb gnb02"><a id="gnb-collection" th:href="@{/collection}">컬렉션</a></div>
+                <div class="gnb gnb03"><a id="gnb-dictionary" th:href="@{/dictionary}">사전</a></div>
+                <!-- <div class="gnb gnb05"><a id="gnb-monitoring" th:href="@{/monitoring}">모니터링</a></div> -->
+                <div th:if="${#authorization.expression('hasAuthority(''ADMIN'')')}" class="gnb gnb05"><a id="gnb-deployed" th:href="@{/deploy}">모듈</a></div>
+				
+                <!--  서브메뉴  -->
+                <div class="sub">
+                    <!-- sub04 : 프로젝트 서브 -->
+                    <ul class="sub04 clearfix off" name="gnb-project" style="display:none;">
+                        <li><a th:href="@{/project}">프로젝트 관리</a></li>
+                        <!--<li><a href="/project/tasks">태스크 관리 </a></li>-->
+                        <li><a th:href="@{/task}">서비스 관리</a></li>
+                        <li><a th:href="@{/project/schedule}">스케줄 현황</a></li>
+                        <li><a th:href="@{/project/simulation}">시뮬레이션</a></li>
+                    </ul>
+
+                    <!-- sub02 : 컬렉션 서브 -->
+                    <ul class="sub02 clearfix off" name="gnb-collection" style="display:none;">
+                        <li><a th:href="@{/collection}">컬렉션 정보</a></li>
+                        <li><a th:href="@{/collection/documents}">문서 조회</a></li>
+                    </ul>
+
+                    <!-- sub03 : 사전 서브 -->
+                    <ul class="sub03 clearfix off" name="gnb-dictionary" style="display:none;">
+                        <li><a th:href="@{/dictionary}">사전 정보</a></li>
+                        <!--<li><a href="#">수용어 사전</a></li>-->
+                        <!--<li><a href="#">불용어 사전</a></li>-->
+                        <!--<li><a href="#">개체명 사전</a></li>-->
+                        <li><a th:href="@{/dictionary/entries}">엔트리 조회</a></li>
+                    </ul>
+
+                    <!-- sub04 : 모니터링 서브 -->
+                    <!-- <ul class="sub05 clearfix off" name="gnb-monitoring" style="display:none;"> -->
+                        <!-- <li><a href="/monitoring">모니터링</a></li> -->
+                    <!-- </ul> -->
+
+                    <!-- sub05 : 모듈 서브 -->
+                    <ul th:if="${#authorization.expression('hasAuthority(''ADMIN'')')}" class="sub05 clearfix off" name="gnb-deployed" style="display:none;">
+						<li><a th:href="@{/deploy}">모듈 관리</a></li> 
+                    </ul>
+
+                </div>
+
+                <!-- 사용자 버튼 -->
+                <div class="userName">[[${#authentication.principal.userName}]] 님</div>
+                <!--/*<div class="manager fL" th:title="|(${#authentication.getAuthorities()})${#authentication.name}|">*/-->
+                <div class="manager fL">
+                    <a href="#" class="btn_manager on"></a>
+                    <ul class="manager_info" style="display: none">
+                        <li><a th:href="@{/logout}">로그아웃</a></li>
+                        <!--<li><a href="/setting/server">서버연결 설정</a></li>-->
+                        <li th:if="${#authorization.expression('hasAuthority(''ADMIN'')')}"><a th:href="@{/users}">사용자 관리</a></li>
+                        <li><a th:href="@{/user/mypage}">마이페이지</a></li>
+                        <li><a href="#" onclick="downloadManual()">메뉴얼&nbsp;&nbsp;&nbsp; <i class="fas fa-external-link-alt"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" th:src="@{/mng/global.js}"></script>
+    <script>
+
+        /**
+         * 현재 페이지 ( window.location) 에 따라 상단 navi-bar 의 css 스타일 변경. class="on"
+         * <ul>
+         * <li>gnb04, sub04 - project</li>
+         * <li>gnb02, sub02 - collection</li>
+         * <li>gnb03, sub03 - dictionary</li>
+         * </ul>
+         */
+        const selectMenu = function changeNaviBarCssStyleByCurrentLocation() {
+
+            $(`.gnb a[href!="${location.pathname}"]`).removeClass('on');
+            $(`.gnb a[href="${location.pathname}"]`).addClass('on');
+
+            // remove id(long) in path
+            let normalizedPath = location.pathname.replace(/\/\d+\//, '/');
+
+            if (location.pathname.startsWith('/collection')) {
+                $('.sub02').show().find(`li > a[href="${normalizedPath}"]`).addClass('on');
+            } else if (location.pathname.startsWith('/dictionary')) {
+                $('.sub03').show().find(`li > a[href="${normalizedPath}"]`).addClass('on');
+             } else if (location.pathname.startsWith('/project')) {
+                $('.sub04').show().find(`li > a[href="${normalizedPath}"]`).addClass('on');
+             // } else if (location.pathname.startsWith('/monitoring')) {
+             //   $('.sub05').show().find(`li > a[href="${normalizedPath}"]`).addClass('on');
+             } else if (location.pathname.startsWith('/deploy')) {
+                $('.sub05').show().find(`li > a[href="${normalizedPath}"]`).addClass('on');
+             }
+        };
+
+        document.addEventListener("DOMContentLoaded", function () {
+            selectMenu();
+
+            // 대시보드 - 하위메뉴 없음
+            /*$(".gnb01, .sub01").mouseenter(function () {
+                $('#gnb').find('li > a').removeClass('on');
+                $('.sub').find('ul').css('display', 'none');
+                // $("ul[name='gnb-collection']").css('display', 'block');
+            });
+            $(".gnb01, .sub01").mouseleave(function () {
+                // $('#gnb-collection').removeClass('on');
+                // $("ul[name='gnb-collection']").css('display', 'none');
+                if ($('#header-currentMenu').val() != '') {
+                    selectMenu($('#header-currentMenu').val());
+                }
+            });*/
+
+            // 프로젝트
+            $(".gnb04, .sub04").mouseenter(function () {
+                $('#gnb').find('li > a').removeClass('on');
+                $('.sub').find('ul').css('display', 'none');
+                $('.gnb04 > a').addClass('on');
+                $("ul.sub04").css('display', 'block');
+            });
+            $(".gnb04, .sub04").mouseleave(function () {
+                $('.gnb02 > a').removeClass('on');
+                $("ul.sub04").css('display', 'none');
+                if ($('#header-currentMenu').val() != '') {
+                    selectMenu($('#header-currentMenu').val());
+                }
+            });
+
+            // 컬렉션
+            $(".gnb02, .sub02").mouseenter(function () {
+                $('#gnb').find('li > a').removeClass('on');
+                $('.sub').find('ul').css('display', 'none');
+                $('.gnb02 > a').addClass('on');
+                $("ul.sub02").css('display', 'block');
+            });
+            $(".gnb02, .sub02").mouseleave(function () {
+                $('.gnb02 > a').removeClass('on');
+                $("ul.sub02").css('display', 'none');
+                if ($('#header-currentMenu').val() != '') {
+                    selectMenu($('#header-currentMenu').val());
+                }
+            });
+
+            // 사전
+            $(".gnb03, .sub03").mouseenter(function () {
+                $('#gnb').find('li > a').removeClass('on');
+                $('.sub').find('ul').css('display', 'none');
+                $('.gnb03 > a').addClass('on');
+                $("ul.sub03").css('display', 'block');
+            });
+            $(".gnb03, .sub03").mouseleave(function () {
+                $('.gnb03 > a').removeClass('on');
+                $("ul.sub03").css('display', 'none');
+                if ($('#header-currentMenu').val() != '') {
+                    selectMenu($('#header-currentMenu').val());
+                }
+            });
+
+            // 모니터링
+            /* 
+            $(".gnb05, .sub05").mouseenter(function () {
+                $('#gnb').find('li > a').removeClass('on');
+                $('.sub').find('ul').css('display', 'none');
+                $('.gnb05 > a').addClass('on');
+                $("ul.sub05").css('display', 'block');
+            });
+            $(".gnb05, .sub05").mouseleave(function () {
+                $('.gnb05 > a').removeClass('on');
+                $("ul.sub05").css('display', 'none');
+                if ($('#header-currentMenu').val() != '') {
+                    selectMenu($('#header-currentMenu').val());
+                }
+            });
+            */
+
+            // 배포관리
+            $(".gnb05, .sub05").mouseenter(function () {
+                $('#gnb').find('li > a').removeClass('on');
+                $('.sub').find('ul').css('display', 'none');
+                $('.gnb05 > a').addClass('on');
+                $("ul.sub05").css('display', 'block');
+            });
+            $(".gnb05, .sub05").mouseleave(function () {
+                $('.gnb05 > a').removeClass('on');
+                $("ul.sub05").css('display', 'none');
+                if ($('#header-currentMenu').val() != '') {
+                    selectMenu($('#header-currentMenu').val());
+                }
+            });
+
+            // 사용자 메뉴
+            // 항상 숨김 // setTimeout(() => $(".manager_info").hide(), 2000);
+            $(".btn_manager, .manager_info").mouseenter(function () {
+                $(".manager_info").css('display', 'block');
+            });
+            $(".btn_manager, .manager_info").mouseleave(function () {
+                $(".manager_info").css('display', 'none');
+            });
+
+            closePopupByBgDblClick();
+        });
+    </script>
+</header>

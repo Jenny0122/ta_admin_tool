@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+
+<head>
+    <title>딕셔너리 리스트</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>사전 정보</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>사전</li>
+                    <li><span>&gt;</span><strong>사전 정보</strong></li>
+                </ul>
+            </div>
+            <div class="cont_box mt0">
+                <!-- <h3 th:text="'사전 리스트 (' + ${dictPage.getTotalElements()} + ' 건)'"></h3> -->
+                <h3 id="totalCount"></h3>
+                <div class="container">
+                    <div class="cont1 clearfix">
+                        <div class="fL">
+                            <select name="size" class="w65 ml10" id="show" onchange="fnDoList(1)">
+								<option value="10" selected="selected">10</option>
+								<option value="20">20</option>
+								<option value="50">50</option>
+							</select>
+							<label for="show" class="ml10">개 보기</label>
+                        </div>
+                        <div class="fR">
+                            <button type="button" class="btn btn_sky w98 ml5" onclick="showPopup('create');"><i
+                                    class="fas fa-plus mr5"></i> 추가
+                            </button>
+                            <button type="button" class="btn btn_sky w98 ml5" onclick="showPopup('update');"><i
+                                    class="fas fa-edit  mr5"></i> 수정
+                            </button>
+                            <button type="button" class="btn btn_red w98 ml5" onclick="deleteDictionary();"><i
+                                    class="fas fa-trash-alt  mr5"></i> 삭제
+                            </button>
+                            <button type="button" class="btn btn_mint w98 ml5" id="upload"
+                                    onclick="uploadDictionary();"><i
+                                    class="fas fa-file-upload  mr5"></i> 업로드
+                            </button>
+                            <button type="button" class="btn btn_mint w98 ml5" id="download"
+                                    onclick="showPopup('download');"><i
+                                    class="fas fa-file-download  mr5"></i> 다운로드
+                            </button>
+							<button type="button" class="btn btn_green w108 ml5" id="download"
+								onclick="sampleDownload('dictionary','zip')"><i class="fas fa-file-download  mr5"></i>샘플(zip)
+							</button>
+                        </div>
+                    </div>
+                    
+                    <div id="listArea"></div>
+                    
+                    <!--사전 Table-->
+                    <table id="dataTable" class="basic_tbl_type mt20 text-ellipsis">
+                    	<colgroup>
+							<col width="6%;">
+							<col width="6%;">
+							<col width="9%;">
+							<col width="7%;">
+							<!-- <col width="5%;"> -->
+							<col width="*;">
+							<col width="7%;">
+							<col width="7%;">
+						</colgroup>
+						<thead>
+							<th>선택</th>
+							<th>NO.</th>
+							<th>사전 명</th>
+							<th>사전 종류</th>
+							<!-- <th>공통사전</th> -->
+							<th>설명</th>
+							<th>엔트리 수</th>
+							<th>생성날짜</th>
+						</thead>
+						<tbody>
+							<tr>
+								<td colspan="8">생성된 사전이 없습니다. 사전을 생성해주세요.</td>
+							</tr>
+						</tbody>
+                    </table>
+                    <!--사전 table end-->
+
+                    <!--사전 정보 pagination-->
+                    <div id="pageNav" class="page_btn_num clear_both">
+                    </div>
+                    <!--사전 정보 pagination end-->
+                </div>
+                <!-- container end-->
+            </div>
+            <!-- cont_box end -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+    <!-- cont_wrap End-->
+
+    <!--사전 추가 팝업-->
+    <div id="create_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall">
+            <!--사전 추가 top-->
+            <div class="top clearfix">
+                <h3 class="fL">사전 추가</h3>
+                <a href="#" class="close_create close fR" onclick="hidePopup('create');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+            <!--사전 추가 top end-->
+
+            <form onsubmit="return createDictionary();">
+                <!--사전 추가 내용-->
+                <div class="pop_container large">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+                            <div><label for="name">사전명</label>
+                                <input type="text" class="w230" id="name" name="dictionaryName" required autofocus
+                                       maxlength="20"
+                                       placeholder="예시) 수용어1">
+                            </div>
+                            <div class="mt20">
+                                <label for="extract_name">사전 타입</label>
+                                <select id="extract_name" name="dictionaryType" class="w230" required>
+                                    <option value="" selected disabled hidden>사전을 선택하세요</option>
+                                    <option value="WHITE">수용어 사전</option>
+                                    <option value="BLACK">불용어 사전</option>
+                                    <option value="BLACK_PATTERN">불용 패턴</option>
+                                    <option value="BLACK_WORD">불용 어절</option>
+                                    <option value="SPLIT_SENT_WORD">문장 분리 어절</option>
+                                    <option value="GROUP_PATTERN">매칭 패턴</option>
+                                </select>
+                            </div>
+                            <!-- // 사용 안 함
+                            <div class="mt20">
+                                <label for="extract_name">공통사전 여부</label>
+                                <select id="extract_name" name="dictionarySharedYn" class="w230" required>
+                                    <option value="N">해당없음</option>
+                                    <option value="Y">Y</option>
+                                </select>
+                            </div>
+                            -->
+                            <div class="mt20"><label for="name_comment">사전 설명</label>
+                                <textarea rows="5" class="w230" id="name_comment" name="dictionaryDesc" required maxlength="1000"
+                                          placeholder="예시) 테스트 수용어 사전"></textarea>
+                            </div>
+                            <p class="comment mt20"> * 사전명, 사전 설명, 사전 타입은 필수 입력 항목입니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <!--사전 추가 내용 end-->
+
+                <!--사전 추가 footer-->
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98" onclick="trimInputFields()">완료</button>
+                </div>
+                <!--사전 추가 footer end-->
+            </form>
+        </div>
+    </div>
+    <!--사전 추가 팝업 end-->
+
+    <!-- 사전 수정 팝업-->
+    <div id="update_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall">
+            <!--사전 수정 팝업 top-->
+            <div class="top clearfix">
+                <h3 class="fL">사전 수정</h3>
+                <a href="#" class="close_update close fR" onclick="hidePopup('update');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+            <!--사전 수정 팝업 top end-->
+
+            <form onsubmit="return updateDictionary();">
+                <!--사전 수정 팝업 내용-->
+                <div class="pop_container large">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+                            <div><label for="nameUP">사전 명</label>
+								<input type="hidden" name="dictionaryId">
+                                <input type="text" class="w230" id="nameUP" name="dictionaryName" required autofocus maxlength="20">
+                            </div>
+                            <div class="mt20">
+                                <label for="extract_nameUP">사전 타입</label>
+								<input type="hidden" name="dictionaryType">
+                                <select id="extract_nameUP" name="dictionaryType" disabled class="w230" title="사전 타입은 변경 할 수 없습니다.">
+                                    <option value="" selected disabled hidden>사전을 선택하세요</option>
+                                    <option value="WHITE">수용어 사전</option>
+                                    <option value="BLACK">불용어 사전</option>
+                                    <option value="BLACK_PATTERN">불용 패턴</option>
+                                    <option value="BLACK_WORD">불용 어절</option>
+                                    <option value="SPLIT_SENT_WORD">문장 분리 어절</option>
+                                    <option value="GROUP_PATTERN">매칭 패턴</option>
+                                </select>
+                            </div>
+                            <!-- // 사용 안 함
+                            <div class="mt20">
+                                <label for="extract_nameUp">공통사전 여부</label>
+                                <select id="extract_nameUp" name="dictionarySharedYn" class="w230" required>
+                                    <option value="N">해당없음</option>
+                                    <option value="Y">Y</option>
+                                </select>
+                            </div>
+                            -->
+                            <div class="mt20"><label for="name_commentUP">사전 설명</label>
+                                <textarea rows="5" class="w230" id="name_commentUP" name="dictionaryDesc" required maxlength="1000"></textarea>
+                            </div>
+                            <p class="comment mt20"> * 사전명, 사전 설명, 사전 타입은 필수 입력 항목입니다.</p>
+                        </div>
+                    </div>
+                </div>
+                <!--사전 수정 팝업  내용 end-->
+
+                <!--사전 수정 팝업 footer-->
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98" onclick="trimInputFields()">완료</button>
+                </div>
+                <!--사전 수정 footer end-->
+            </form>
+        </div>
+    </div>
+    <!--사전 수정 팝업 end-->
+
+    <!-- 사전 다운로드 팝업-->
+    <div id="download_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <!--사전 다운로드 popup top-->
+        <div class="pop_box xsmall">
+            <div class="top clearfix">
+                <h3 class="fL">사전 다운로드</h3>
+                <a href="#" class="close_download close fR" onclick="hidePopup('download');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+            <!--사전 다운로드 popup top end-->
+
+            <!--사전 다운로드 popup 내용-->
+            <div class="pop_container" style="height: 225px;">
+                <div class="cont_box m0">
+                    <div class="cont1 clearfix">
+                        <div class="mt20">
+                            <label style="width: auto" for="field_type">파일 유형 선택</label>
+                            <select id="field_type" name="export_format" required class="w200 " autofocus
+                                    style="margin-left: 16px">
+                                <option value="" selected disabled hidden>유형을 선택하세요</option>
+                                <option value="TEXT">TEXT</option>
+                                <option value="CSV">CSV</option>
+                            </select>
+                        </div>
+                        <!--<div class="mt20">-->
+                        <!--<label style="width: auto" for="download_path">다운로드 경로</label>-->
+                        <!--<input type="text" class="w200 ml20" id="download_path">-->
+                        <!--<input type="button" class="fR w65 btn btn_gray" id="path" value="경로" style="padding: 0">-->
+                        <!--</div>-->
+                    </div>
+                </div>
+            </div>
+            <!--사전 다운로드 popup 내용 end-->
+
+            <!--사전 다운로드 popup footer-->
+            <div class="pop_bottom align_c">
+                <button type="button" class="btn btn_blue w98" onclick="downloadDictionary();"><i
+                        class="fas fa-file-download"></i> 다운로드
+                </button>
+            </div>
+            <!--사전 다운로드 popup footer end-->
+        </div>
+    </div>
+    <!--사전 다운로드 팝업 end-->
+
+    <script type="text/javascript" th:src="@{/mng/dictionary/dictionaries.js}"></script>
+    <script type="text/javascript">
+        // document loading 이 끝난 후
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // byte (Number) --> KB, MB, GB ... (String)
+            [...document.querySelectorAll("td.dict-size")].forEach(tdElement => {
+                tdElement.innerText = get_file_size(tdElement.dataset.size);
+            });
+
+            // 사용성 - table tr 에 click 이벤트 등록
+            radioByTableRowClick();
+
+        });
+    </script>
+
+
+</section>
+</body>
+
+</html>
