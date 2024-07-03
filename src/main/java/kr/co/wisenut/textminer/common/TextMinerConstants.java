@@ -27,6 +27,8 @@ public class TextMinerConstants {
 	public final static String TASK_TYPE_NAME_SUMMARY_PREPROECESS = "전처리(요약)";
 	public final static String TASK_TYPE_STRING_MATCHER = "STRING_MATCHER";
 	public final static String TASK_TYPE_NAME_STRING_MATCHER = "문자열 매칭";
+	public final static String TASK_TYPE_AUTO_QA = "AUTO_QA";
+	public final static String TASK_TYPE_NAME_AUTO_QA = "AUTO QA";
 	
 	// 컬렉션 구분
 	public final static String COLLECTION_TYPE_CLASSIFICATION = "CLASSIFICATION";
@@ -57,6 +59,10 @@ public class TextMinerConstants {
 	// 문자열 매칭 패턴
 	public final static String DICTIONARY_TYPE_GROUP_PATTERN = "GROUP_PATTERN";
 	public final static String DICTIONARY_TYPE_NAME_GROUP_PATTERN = "매칭 패턴";
+	
+	// AUTO QA 지식데이터
+	public final static String DICTIONARY_TYPE_AUTO_QA_DATA = "AUTO_QA_DATA";
+	public final static String DICTIONARY_TYPE_NAME_AUTO_QA_DATA = "AUTO QA 지식";
 	
 	// 파일 업로드 대상
 	public final static String PROGRESS_TYPE_COLLECTION = "COLLECTION";

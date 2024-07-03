@@ -117,11 +117,13 @@ public class ModelRestController {
 		modelVo.setCollectionOwner(user.getUsername());
 		
 		if (modelVo.getTaskType().equals(TextMinerConstants.TASK_TYPE_KEYWORD_EXTRACTION)
-		 || modelVo.getTaskType().equals(TextMinerConstants.TASK_TYPE_RELATED_EXTRACTION)) {
-			resultMap = modelService.replaceDictionary(modelVo, user);
-		} else {
-			resultMap = modelService.replacePattern(modelVo, user);
-		}
+				 || modelVo.getTaskType().equals(TextMinerConstants.TASK_TYPE_RELATED_EXTRACTION)) {
+					resultMap = modelService.replaceDictionary(modelVo, user);
+				} else if (modelVo.getTaskType().equals(TextMinerConstants.TASK_TYPE_AUTO_QA)) {
+					resultMap = modelService.replaceAutoQaData(modelVo, user);
+				} else {
+					resultMap = modelService.replacePattern(modelVo, user);
+				}
 		
 		return resultMap; 
 	}

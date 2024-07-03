@@ -414,6 +414,77 @@ public class ModelService {
     	}
 	}
 	
+	// AUTO QA 지식 변경
+	public Map<String, Object> replaceAutoQaData(ModelVo modelVo, TmUser user) {
+
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		
+		// task 정보 가져오기
+		TaskVo taskVo = taskMapper.getTaskInfoUseModel(modelVo);
+		
+    	JsonParser parser = new JsonParser();
+    	
+    	try {
+    		// api URI 설정
+			uri = UriComponentsBuilder
+				 .fromUriString("http://" + tmProperties.getCoreHost() + ":" + tmProperties.getCorePort() + "/api/replaceAutoQaData")
+				 .build()
+				 .toUri();
+			
+			// Header & Body 설정
+			headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+
+			// parameter 설정
+			JsonObject paramMap = new JsonObject();
+			paramMap.addProperty("projectId", taskVo.getProjectId());
+			
+			// IP & Port
+			paramMap.addProperty("serverIp", classifierProperties.getAutoQaHost());
+			paramMap.addProperty("serverPort", classifierProperties.getAutoQaPort());
+			
+			// AUTO QA 지식데이터
+			paramMap.addProperty("dictionaryType", TextMinerConstants.DICTIONARY_TYPE_AUTO_QA_DATA);
+			
+			entity = new HttpEntity<>(paramMap.toString(), headers);
+			
+			// API Call
+			factory = new HttpComponentsClientHttpRequestFactory();
+			factory.setConnectTimeout(10000);
+			
+			restTemplate = new RestTemplate(factory);
+			responseEntity = restTemplate.postForEntity(uri, entity, String.class);	
+    		JsonObject result = (JsonObject) parser.parse(responseEntity.getBody());
+			
+    		if (result.get("result").getAsString().equals("200")) {
+    			resultMap.put("result", "S");
+    			resultMap.put("resultMsg", "지식 설정이 완료되었습니다.");
+    		} else {
+    			resultMap.put("result", "F");
+    			resultMap.put("resultMsg", "지식 설정에 실패하었습니다.");
+    		}
+	    		
+    		// 지식 반영 요청 후 이력 저장
+			ActionHistoryVo actionHistoryVo = new ActionHistoryVo();
+
+	        actionHistoryVo.setActionUser(user.getUsername());
+	        actionHistoryVo.setResourceId("0");
+	        actionHistoryVo.setResourceType(TextMinerConstants.COMMON_BLANK);
+	        actionHistoryVo.setActionType(TextMinerConstants.ACTION_HISTORY_TYPE_TRAIN_MODEL);
+	        actionHistoryVo.setActionMsg(user.getUsername() + " 지식 반영 ( " + taskVo.getModelFile() + " )");
+    		actionHistoryVo.setUserIp(user.getUserIp());
+	        
+	        actionHistoryMapper.insertActionHistory(actionHistoryVo);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    		resultMap.put("result","F");
+    		resultMap.put("resultMsg", "지식 설정에 실패하였습니다.");
+    	} finally {
+    		return resultMap;
+    	}
+	}
+	
+	
 	// 패턴변경
 	public Map<String, Object> replacePattern(ModelVo modelVo, TmUser user) {
 

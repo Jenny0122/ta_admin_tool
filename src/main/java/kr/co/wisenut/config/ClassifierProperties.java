@@ -68,4 +68,8 @@ public class ClassifierProperties {
     // String Matcher IP & Port
     private String stringMatcherHost;
     private int stringMatcherPort;
+    
+    // auto QA IP & Port
+    private String autoQaHost;
+    private int autoQaPort;
 }
