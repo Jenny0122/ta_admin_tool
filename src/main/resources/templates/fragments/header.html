@@ -16,6 +16,7 @@
                 <div class="gnb gnb03"><a id="gnb-dictionary" th:href="@{/dictionary}">사전</a></div>
                 <!-- <div class="gnb gnb05"><a id="gnb-monitoring" th:href="@{/monitoring}">모니터링</a></div> -->
                 <div th:if="${#authorization.expression('hasAuthority(''ADMIN'')')}" class="gnb gnb05"><a id="gnb-deployed" th:href="@{/deploy}">모듈</a></div>
+                <div class="gnb gnb06"><a id="gnb-autoqa" th:href="@{/autoqa}">규정준수</a></div>
 				
                 <!--  서브메뉴  -->
                 <div class="sub">
@@ -51,6 +52,12 @@
                     <!-- sub05 : 모듈 서브 -->
                     <ul th:if="${#authorization.expression('hasAuthority(''ADMIN'')')}" class="sub05 clearfix off" name="gnb-deployed" style="display:none;">
 						<li><a th:href="@{/deploy}">모듈 관리</a></li> 
+                    </ul>
+                    
+                    <!-- sub06 : 컬렉션 서브 -->
+                    <ul class="sub06 clearfix off" name="gnb-autoqa" style="display:none;">                    
+                        <li><a th:href="@{/autoqa}">분류 관리(InBound)</a></li> 
+                        <li><a th:href="@{/autoqa/autoqaOB}">분류 관리(OutBound)</a></li>
                     </ul>
 
                 </div>
@@ -100,6 +107,8 @@
              //   $('.sub05').show().find(`li > a[href="${normalizedPath}"]`).addClass('on');
              } else if (location.pathname.startsWith('/deploy')) {
                 $('.sub05').show().find(`li > a[href="${normalizedPath}"]`).addClass('on');
+             } else if (location.pathname.startsWith('/autoqa')) {
+                 $('.sub06').show().find(`li > a[href="${normalizedPath}"]`).addClass('on');
              }
         };
 
@@ -192,6 +201,21 @@
             $(".gnb05, .sub05").mouseleave(function () {
                 $('.gnb05 > a').removeClass('on');
                 $("ul.sub05").css('display', 'none');
+                if ($('#header-currentMenu').val() != '') {
+                    selectMenu($('#header-currentMenu').val());
+                }
+            });
+            
+            //자동분류
+            $(".gnb06, .sub06").mouseenter(function () {
+                $('#gnb').find('li > a').removeClass('on');
+                $('.sub').find('ul').css('display', 'none');
+                $('.gnb06 > a').addClass('on');
+                $("ul.sub06").css('display', 'block');
+            });
+            $(".gnb06, .sub06").mouseleave(function () {
+                $('.gnb02 > a').removeClass('on');
+                $("ul.sub06").css('display', 'none');
                 if ($('#header-currentMenu').val() != '') {
                     selectMenu($('#header-currentMenu').val());
                 }
