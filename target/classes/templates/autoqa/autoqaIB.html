@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  xmlns="http://www.w3.org/1999/xhtml"
+	  xmlns:th="http://www.thymeleaf.org"
+	  layout:decorate="~{template}">
+
+<head>
+	<title>자동분류 인바운드</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+	<script type='text/javascript' src="../lib/jquery/jquery-3.7.1.min.js"></script>
+	<script type='text/javascript' src="../lib/jquery/jstree-3.2.1.min.js"></script>
+</head>
+
+<body>
+<section layout:fragment="content">
+	<script>
+		$(function () {
+			$('#treeViewMenu').jstree();
+			// 7 bind to events triggered on the tree
+			// $('#treeViewMenu').on("changed.jstree", function (e, data) {
+			// 	console.log(data.selected);
+			// });
+			// // 8 interact with the tree - either way is OK
+			// $('button').on('click', function () {
+			// 	$('#treeViewMenu').jstree(true).select_node('상담기본');
+			// });
+		});
+	</script>
+	<!-- 240702 cont_wrap 변경 -->
+	<div class="cont_wrap">
+		<div class="cont_area log">
+			<div class="cont_tit clearfix">
+				<h2>상담분류 정보</h2>
+				<ul class="location">
+					<li><i class="fas fa-home"></i><span>&gt;</span></li>
+					<li>상담분류</li>
+					<li><span>&gt;</span><strong>분류관리(InBound)</strong></li>
+				</ul>
+			</div>
+
+			<!-- tree_area -->
+			<div class="cont_box fl_box">
+				<div id="treeViewMenu">
+					<ul>
+						<li class="jstree-open" id="node_1"> 인바운드
+							<ul>
+								<li id="child_node_1"><a href="#" class="jstree-clicked"> 상담기본 </a></li>
+							</ul>
+						</li>
+						<li class="jstree-open" id="node_2"> 아웃바운드 </li>
+					</ul>
+				</div>
+			</div>
+			<!--// tree_area -->
+
+
+			<!-- 오른쪽 정렬시, fr_box 클래스 추가 -->
+			<div class="cont_box mt0 fr_box">
+				<div class="container">
+					<div class="cont1 clearfix">
+						<div class="fL">
+							<select name="size" class="w65 ml10" id="show" onchange="fnDoList(1)">
+								<option value="10" selected="selected">10</option>
+								<option value="20">20</option>
+								<option value="50">50</option>
+							</select>
+							<label for="show" class="ml10">개 보기</label>
+						</div>
+						<div class="fR">
+
+							<button type="button" class="btn btn_sky w98 ml5" onclick="showPopup('create');"><i class="fas fa-plus mr5"></i> 추가
+							</button>
+							<button type="button" class="btn btn_sky w98 ml5" onclick="insertQAScript"><i class="fas fa-edit  mr5"></i> 저장
+							</button>
+							<button type="button" class="btn btn_red w98 ml5" onclick="deleteQAScript();"><i class="fas fa-trash-alt  mr5"></i> 삭제
+							</button>
+							<button type="button" class="btn btn_mint w98 ml5" id="upload" onclick="uploadQAScript();"><i class="fas fa-file-upload  mr5"></i> 업로드
+							</button>
+							<button type="button" class="btn btn_mint w98 ml5" id="download" onclick="showPopup('download');"><i class="fas fa-file-download  mr5"></i> 다운로드
+							</button>
+							<button type="button" class="btn btn_green w108 ml5" id="download" onclick="sampleDownload('autoqa','zip')"><i class="fas fa-file-download  mr5"></i>샘플(Excel)
+							</button>
+						</div>
+					</div>
+					<div id="listArea"></div>
+					<div class="cont1 clearfix1 mt20" style="border:1px solid #ddd;padding:10px 8px;">
+						<label for="show" class="ml10">카테고리 : </label>
+						<tr>
+							<td> 인바운드 &gt; 상담기본 &gt; 기본상담</td>
+						</tr>
+						<br>
+						<label for="show" class="ml10" style="position:relative;top:7px;">사용여부 : </label>
+						<tr>
+							<select id="choice_Yn" class="w30 mt15" autofocus onchange="fnSelectProject()">
+								<option value="aaaaa" th:selected="${taskType=='aaaa'}? 'selected'">Y</option>
+								<option value="bbbb" th:selected="${taskType=='bbbb'}? 'selected'">N</option>
+							</select>
+						</tr>
+						</br>
+					</div>
+
+					<!--스크립트 Table-->
+					<table id="dataTable" class="basic_tbl_type mt20 text-ellipsis">
+						<colgroup>
+							<col width="6%;">
+							<col width="6%;">
+							<col width="15%;">
+							<col width="7%;">
+							<col width="*;">
+							<col width="7%;">
+							<col width="7%;">
+						</colgroup>
+						<thead>
+						<th>선택</th>
+						<th>순서</th>
+						<th>준수항목</th>
+						<th>배점</th>
+						<th>스크립트</th>
+						<th>유사문장</th>
+						<th>키워드</th>
+						</thead>
+						<tbody>
+						<tr>
+							<td><input type="checkbox" name="qa_choice" value="" );></td>
+							<td></td>
+							<td>
+								<select id="compliance_item_cd" name="complianceItemCd" class="w180" required readonly="readonly">
+									<option value="" selected disabled>준수항목을 선택하세요</option>
+									<option value="comItem01" th:selected="${complianceItemCd=='10'}? 'selected'">첫인사</option>
+									<option value="comItem02" th:selected="${complianceItemCd=='20'}? 'selected'">대기안내</option>
+									<option value="comItem03" th:selected="${complianceItemCd=='30'}? 'selected'">종료시점</option>
+									<option value="comItem04" th:selected="${complianceItemCd=='40'}? 'selected'">끝인사</option>
+									<option value="comItem05" th:selected="${complianceItemCd=='50'}? 'selected'">금지용어</option>
+								</select>
+							</td>
+							<td><input type="text" name="score" style="width:95%" value=""  readonly="readonly");></td>
+							<td><input type="text" name="scriptCont" style="width:95%" value=""  readonly="readonly");></td>
+							<td>
+								<button id="saveBtn" type="button" class="btn btn_blue w98" onclick="saveSimScipt()"><i class="far fa-save"></i>유사문장</button>
+							</td>
+							<td>
+								<button id="saveBtn" type="button" class="btn btn_green w98" onclick="saveKeyword()"><i class="far fa-save"></i>키워드</button>
+							</td>
+						</tr>
+						</tbody>
+
+					</table>
+					<!--스크립트 table end-->
+
+					<!--스크립트 정보 pagination-->
+					<div id="pageNav" class="page_btn_num clear_both">
+					</div>
+					<!--스크립트 정보 pagination end-->
+				</div>
+				<!-- container end-->
+			</div>
+			<!-- cont_box end -->
+		</div>
+		<!-- cont_area end-->
+		<!-- cont_wrap End-->
+
+		<!--스크립트 추가 팝업-->
+		<div id="create_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+			<div class="bg"></div>
+			<div class="pop_box xsmall">
+				<!--스크립트 추가 top-->
+				<div class="top clearfix">
+					<h3 class="fL">스크립트 문장</h3>
+					<a href="#" class="close_create close fR" onclick="hidePopup('create');"><i class="fas fa-times"></i></a>
+				</div>
+				<!--스크립트 추가 top end-->
+
+				<form onsubmit="return createScript();">
+					<!--스크립트 추가 내용-->
+					<div class="pop_container large">
+						<div class="cont_box m0">
+							<div class="cont1 clearfix">
+								<div class="mt20">
+									<input type="hidden" name="scriptId">
+									<label for="compliance_item">준수 항목</label>
+									<select id="compliance_item_cd" name="complianceItemCd" class="w180" required readonly="readonly">
+										<option value="" selected disabled>준수항목을 선택하세요</option>
+										<option value="comItem01" th:selected="${complianceItemCd=='10'}? 'selected'">첫인사</option>
+										<option value="comItem02" th:selected="${complianceItemCd=='20'}? 'selected'">대기안내</option>
+										<option value="comItem03" th:selected="${complianceItemCd=='30'}? 'selected'">종료시점</option>
+										<option value="comItem04" th:selected="${complianceItemCd=='40'}? 'selected'">끝인사</option>
+										<option value="comItem05" th:selected="${complianceItemCd=='50'}? 'selected'">금지용어</option>
+									</select>
+								</div>
+								<div><label for="name" class="mt20">배점</label>
+									<input type="text" class="mt20" id="name" name="score" required autofocus maxlength="20" placeholder="">
+								</div>
+
+								<div class="mt20"><label for="scriptCont">스크립트</label>
+									<textarea rows="5" class="w230" id="script_cont" name="scriptCont" required maxlength="1000" placeholder="예시) 안녕하세요. 상담사000입니다."></textarea>
+								</div>
+								<p class="comment mt20"> * 스크립트, 준수항목은 필수 입력 항목입니다.</p>
+							</div>
+						</div>
+					</div>
+					<!--스크립트 추가 내용 end-->
+
+					<!--스크립트 추가 footer-->
+					<div class="pop_bottom align_c">
+						<button type="submit" class="btn btn_blue w98" onclick="trimInputFields()">완료</button>
+					</div>
+					<!--사전 추가 footer end-->
+				</form>
+			</div>
+		</div>
+		<!--스크립트 추가 팝업 end-->
+
+		<!-- 스크립트 수정 팝업-->
+		<div id="update_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+			<div class="bg"></div>
+			<div class="pop_box xsmall">
+				<!--스크립트 수정 팝업 top-->
+				<div class="top clearfix">
+					<h3 class="fL">스크립트 수정</h3>
+					<a href="#" class="close_update close fR" onclick="hidePopup('update');"><i class="fas fa-times"></i></a>
+				</div>
+				<!--스크립트 수정 팝업 top end-->
+
+				<form onsubmit="return updateScript();">
+					<!--스크립트 수정 팝업 내용-->
+					<div class="pop_container large">
+						<div class="cont_box m0">
+							<div class="cont1 clearfix">
+								<div><label for="nameUP">스크립트</label>
+									<input type="hidden" name="dictionaryId">
+									<input type="text" class="w230" id="nameUP" name="dictionaryName" required autofocus maxlength="20">
+								</div>
+								<div class="mt20">
+									<label for="compliance_item">준수 항목</label>
+									<input type="hidden" name="complianceItemCd">
+									<select id="compliance_item_cd" name="complianceItemCd" class="w180" required readonly="readonly">
+										<option value="" selected disabled>준수항목을 선택하세요</option>
+										<option value="comItem01" th:selected="${complianceItemCd=='10'}? 'selected'">첫인사</option>
+										<option value="comItem02" th:selected="${complianceItemCd=='20'}? 'selected'">대기안내</option>
+										<option value="comItem03" th:selected="${complianceItemCd=='30'}? 'selected'">종료시점</option>
+										<option value="comItem04" th:selected="${complianceItemCd=='40'}? 'selected'">끝인사</option>
+										<option value="comItem05" th:selected="${complianceItemCd=='50'}? 'selected'">금지용어</option>
+									</select>
+								</div>
+
+								<div class="mt20"><label for="scriptCont">스크립트</label>
+									<textarea rows="5" class="w230" id="script_cont" name="scriptCont" required maxlength="1000" ></textarea>
+								</div>
+								<p class="comment mt20"> * 스크립트는 필수 입력 항목입니다.</p>
+							</div>
+						</div>
+					</div>
+					<!--스크립트 수정 팝업  내용 end-->
+
+					<!--스크립트 수정 팝업 footer-->
+					<div class="pop_bottom align_c">
+						<button type="submit" class="btn btn_blue w98" onclick="trimInputFields()">완료</button>
+					</div>
+					<!--사전 수정 footer end-->
+				</form>
+			</div>
+		</div>
+		<!--사전 수정 팝업 end-->
+
+		<!-- 스크립트 다운로드 팝업-->
+		<div id="download_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+			<div class="bg"></div>
+			<!--사전 다운로드 popup top-->
+			<div class="pop_box xsmall">
+				<div class="top clearfix">
+					<h3 class="fL">스크립트 다운로드</h3>
+					<a href="#" class="close_download close fR" onclick="hidePopup('download');"><i class="fas fa-times"></i></a>
+				</div>
+				<!--사전 다운로드 popup top end-->
+
+				<!--스크립트 다운로드 popup 내용-->
+				<div class="pop_container" style="height: 225px;">
+					<div class="cont_box m0">
+						<div class="cont1 clearfix">
+							<div class="mt20">
+								<label style="width: auto" for="field_type">파일 유형 선택</label>
+								<select id="field_type" name="export_format" required class="w200 " autofocus style="margin-left: 16px">
+									<option value="" selected disabled hidden>유형을 선택하세요</option>
+									<option value="TEXT">TEXT</option>
+									<option value="CSV">CSV</option>
+								</select>
+							</div>
+							<!--<div class="mt20">-->
+							<!--<label style="width: auto" for="download_path">다운로드 경로</label>-->
+							<!--<input type="text" class="w200 ml20" id="download_path">-->
+							<!--<input type="button" class="fR w65 btn btn_gray" id="path" value="경로" style="padding: 0">-->
+							<!--</div>-->
+						</div>
+					</div>
+				</div>
+				<!--스크립트 다운로드 popup 내용 end-->
+
+				<!--스크립트 다운로드 popup footer-->
+				<div class="pop_bottom align_c">
+					<button type="button" class="btn btn_blue w98" onclick="downloadScript();"><i class="fas fa-file-download"></i> 다운로드
+					</button>
+				</div>
+				<!--스크립트 다운로드 popup footer end-->
+			</div>
+		</div>
+		<!--스크립트 다운로드 팝업 end-->
+		<!--
+        <script scr="/js/jstree.js"></script>
+        -->
+		<script type="text/javascript" th:src="@{/mng/autoqa/autoqaIB.js}"></script>
+		<script type="text/javascript">
+			// document loading 이 끝난 후
+			document.addEventListener("DOMContentLoaded", function() {
+
+				// byte (Number) --> KB, MB, GB ... (String)
+				[...document.querySelectorAll("td.dict-size")].forEach(tdElement => {
+					tdElement.innerText = get_file_size(tdElement.dataset.size);
+				});
+
+				// 사용성 - table tr 에 click 이벤트 등록
+				checkByTableRowClick("table.basic_tbl_type tbody tr");
+
+			});
+
+		</script>
+
+	</div>
+	<!--// 240702 cont_wrap 변경-->
+	</script>
+
+
+</section>
+</body>
+
+</html>
