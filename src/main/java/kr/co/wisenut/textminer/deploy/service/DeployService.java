@@ -451,6 +451,8 @@ public class DeployService {
 					|| serverInfo.getServerTask().equals(TextMinerConstants.TASK_TYPE_SUMMARY_PREPROECESS)
 					|| serverInfo.getServerTask().equals(TextMinerConstants.TASK_TYPE_STRING_MATCHER)) {
 				resultMap = requestDeployPattern(serverInfo.getServerIp(), serverInfo.getServerPort(), serverInfo.getServerTask());
+			} else if (serverInfo.getServerTask().equals(TextMinerConstants.TASK_TYPE_AUTO_QA)) {
+				resultMap = requestDeployAutoQaData(serverInfo.getServerIp(), serverInfo.getServerPort());
 			} else {
 				resultMap = requestDeployDictionary(serverInfo.getServerIp(), serverInfo.getServerPort());
 			}
@@ -571,6 +573,60 @@ public class DeployService {
         		resultMap.put("result","F");
         		resultMap.put("resultMsg", failDictionaryType + " 사전 설정에 실패하였습니다.");
     		}
+		} catch (ResourceAccessException e) {
+			e.printStackTrace();
+			resultMap.put("result", "N");
+			resultMap.put("resultMsg", "배포 요청을 실패하였습니다.");
+		}
+		
+		return resultMap;
+	}
+	
+	// AUTO QA 지식 반영
+	public Map<String, Object> requestDeployAutoQaData(String hostIp, int port) {
+		
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		
+		try {
+			// TmInterface를 통한 반영 요청
+			uri = UriComponentsBuilder
+				 .fromUriString("http://" + hostIp + ":" + tmProperties.getCorePort() + "/api/replaceAutoQaData")
+				 .build()
+				 .toUri();
+			
+			// Header & Body 설정
+			headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+
+			// parameter 설정
+			JsonObject paramMap = new JsonObject();
+			paramMap.addProperty("serverIp", hostIp);
+			paramMap.addProperty("serverPort", port);
+			paramMap.addProperty("projectId", "");
+			
+			// AUTO QA 지식데이터
+			paramMap.addProperty("dictionaryType", TextMinerConstants.DICTIONARY_TYPE_AUTO_QA_DATA);
+			
+			entity = new HttpEntity<>(paramMap.toString(), headers);
+			
+			// API Call
+			factory = new HttpComponentsClientHttpRequestFactory();
+			factory.setConnectTimeout(10000);
+			
+			restTemplate = new RestTemplate(factory);
+			responseEntity = restTemplate.postForEntity(uri, entity, String.class);	
+			
+			JsonParser parser = new JsonParser();
+    		JsonObject result = (JsonObject) parser.parse(responseEntity.getBody());
+			
+    		if (result.get("result").getAsString().equals("200")) {
+    			resultMap.put("result", "S");
+    			resultMap.put("resultMsg", "배포 작업이 완료되었습니다.");
+    		} else {
+    			resultMap.put("result", "F");
+    			resultMap.put("resultMsg", "배포 작업에 실패하었습니다.");
+    		}
+			
 		} catch (ResourceAccessException e) {
 			e.printStackTrace();
 			resultMap.put("result", "N");

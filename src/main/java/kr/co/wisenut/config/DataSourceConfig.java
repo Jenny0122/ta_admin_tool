@@ -51,6 +51,7 @@ import com.zaxxer.hikari.HikariDataSource;
 						  	, "kr.co.wisenut.textminer.simulation.mapper"
 						  	, "kr.co.wisenut.textminer.schedule.mapper"
 						  	, "kr.co.wisenut.textminer.deploy.mapper"
+						  	, "kr.co.wisenut.textminer.autoqa.mapper"
 							}
 		   , sqlSessionFactoryRef = "sqlSessionFactory")
 @Configuration

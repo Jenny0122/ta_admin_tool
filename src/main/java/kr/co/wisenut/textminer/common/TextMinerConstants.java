@@ -67,6 +67,7 @@ public class TextMinerConstants {
 	// 파일 업로드 대상
 	public final static String PROGRESS_TYPE_COLLECTION = "COLLECTION";
 	public final static String PROGRESS_TYPE_DICTIONARY = "DICTIONARY";
+	public final static String PROGRESS_TYPE_AUTOQA = "AUTOQA";
 	
 	// 파일 업로드 에러 제어방식
 	public final static String PROGRESS_ERROR_SKIP = "SKIP";
