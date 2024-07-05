@@ -1,5 +1,9 @@
 $(document).ready(function() {
-	fnDoList(1)
+	//fnDoList(1);
+	
+	// 트리 조회
+	fnCateTree();
+	
 });
 
 function fnDoList(pageRow) {
@@ -31,6 +35,48 @@ function fnDoList(pageRow) {
 			}, 'Timeout...!');
 		}
 	})
+}
+
+// 트리 조회
+function fnCateTree() {
+	var params = new Object();
+	
+	$.ajax({
+		url: contextPath + "/autoqaRest/getQACategory",
+		type: "POST",
+		cache: false,
+		contentType: "application/json",
+		dataType: "json",
+		data: JSON.stringify(params),
+		async: false,
+		success: function(data) {
+			//debugger;
+			var company = new Array();
+			// 데이터 받아옴
+			$.each(data, function(idx, item){
+				company[idx] = {id:item.id, parent:item.parentId, text:item.name};
+			});
+			// 트리 생성
+			$('#treeViewMenu').jstree({
+				core: {
+						data: company    //데이터 연결
+				},
+				types: {
+						'default': {
+							'icon': 'jstree-folder'
+						}
+				},
+				plugins: ['wholerow', 'types']
+			})
+			.bind('loaded.jstree', function(event, data){
+			//트리 로딩 롼료 이벤트
+			})
+			.bind('select_node.jstree', function(event, data){
+			//노드 선택 이벤트
+			})
+		}
+	})
+
 }
 
 // 스크립트 정보 채우기

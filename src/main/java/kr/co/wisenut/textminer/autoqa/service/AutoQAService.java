@@ -9,14 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import kr.co.wisenut.textminer.autoqa.mapper.AutoQAMapper;
+import kr.co.wisenut.textminer.autoqa.vo.AutoQaCateInfoVo;
+import kr.co.wisenut.textminer.autoqa.vo.AutoQaScriptVo;
 import kr.co.wisenut.textminer.common.TextMinerConstants;
 import kr.co.wisenut.textminer.common.mapper.ImportProgressMapper;
 import kr.co.wisenut.textminer.common.vo.ImportProgressVo;
-import kr.co.wisenut.textminer.task.vo.TaskVo;
-import kr.co.wisenut.textminer.autoqa.mapper.AutoQAMapper;
-import kr.co.wisenut.textminer.autoqa.vo.AutoQaScriptVo;
-
-import kr.co.wisenut.textminer.autoqa.vo.AutoQaCateVo;
 //import kr.co.wisenut.textminer.autoqa.vo.AutoQaCateInfoVo;
 //import kr.co.wisenut.textminer.autoqa.vo.AutoQaSimScriptVo;
 //import kr.co.wisenut.textminer.autoqa.vo.AutoQaKeywordVo;
@@ -253,4 +251,10 @@ public class AutoQAService {
 		
 		return convertHtml.toString();
 	}
+	
+	// 상담카테고리 Depth 구조 조회
+	public List<AutoQaCateInfoVo> getQACategory(Map<String, Object> paramMap) {
+		return autoQaMapper.getQACategory(paramMap);
+	}
+
 }

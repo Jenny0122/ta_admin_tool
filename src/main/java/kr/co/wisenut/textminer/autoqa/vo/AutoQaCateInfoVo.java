@@ -22,4 +22,10 @@ public class AutoQaCateInfoVo extends ImportProgressVo {
 	
 	private String role;									// 로그인 아이디의 권한
 	
+	// 트리 생성을 위한 선언
+	private String id;										// category id
+	private String name;									// category name
+	private String depth;									// depth
+	private String parentId;								// parent category id
+	
 }

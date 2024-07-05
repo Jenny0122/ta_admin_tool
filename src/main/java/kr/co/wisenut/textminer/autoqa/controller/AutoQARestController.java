@@ -1,56 +1,30 @@
 package kr.co.wisenut.textminer.autoqa.controller;
 
-import java.nio.file.Path;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
-import org.apache.tomcat.util.json.ParseException;
-import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Pageable;
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Sort;
-import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import kr.co.wisenut.textminer.autoqa.service.AutoQAService;
+import kr.co.wisenut.textminer.autoqa.vo.AutoQaCateInfoVo;
 import kr.co.wisenut.textminer.autoqa.vo.AutoQaScriptVo;
-import kr.co.wisenut.textminer.collection.service.CollectionService;
-import kr.co.wisenut.textminer.collection.vo.CollectionVo;
 import kr.co.wisenut.textminer.common.TextMinerConstants;
-import kr.co.wisenut.textminer.common.resource.StagingFileInfo;
-import kr.co.wisenut.textminer.common.resource.StorageResourceType;
-import kr.co.wisenut.textminer.common.service.DocumentParserService;
-import kr.co.wisenut.textminer.common.service.ImportProgressService;
-import kr.co.wisenut.textminer.common.service.StorageService;
-import kr.co.wisenut.textminer.common.vo.ImportProgressVo;
-import kr.co.wisenut.textminer.dictionary.service.DictionaryService;
-import kr.co.wisenut.textminer.dictionary.vo.DictionaryVo;
-import kr.co.wisenut.textminer.history.vo.ActionHistoryVo;
 import kr.co.wisenut.textminer.history.service.ActionHistoryService;
-import kr.co.wisenut.config.TMProperties;
-import kr.co.wisenut.exception.StorageException;
-import kr.co.wisenut.exception.StorageFileNotFoundException;
-import kr.co.wisenut.textminer.user.service.UserService;
+import kr.co.wisenut.textminer.history.vo.ActionHistoryVo;
 import kr.co.wisenut.textminer.user.vo.TmUser;
 
 @Controller
@@ -58,19 +32,7 @@ import kr.co.wisenut.textminer.user.vo.TmUser;
 public class AutoQARestController {
 	
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	
-	@Autowired
-	private ImportProgressService importProgressService;
-	
-	@Autowired
-	private MultipartProperties multipartProperties;
-	
-	@Autowired
-	private DocumentParserService documentParser;
-	
-	@Autowired
-	private StorageService storageService;
-	
+
 	@Autowired
 	private ActionHistoryService actionHistoryService;
 	
@@ -203,6 +165,13 @@ public class AutoQARestController {
  		}
  				
  		return resultMap; 
+ 	}
+ 	
+ 	// 상담카테고리 Depth 구조 조회
+ 	@PostMapping("/getQACategory")
+ 	@ResponseBody
+ 	public List<AutoQaCateInfoVo> getQACategory(@RequestBody Map<String, Object> paramMap, HttpServletRequest request) {
+ 		return autoQAService.getQACategory(paramMap);
  	}
    
 }

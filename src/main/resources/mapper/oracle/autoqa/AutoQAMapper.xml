@@ -188,5 +188,22 @@
 			   FROM   WISETM_QA_SCRIPT)TMP
 	  ) TOTAL
 	</sql>
+	
+	<!-- 상담카테고리 Depth 구조 조회 -->
+	<select id="getQACategory" parameterType="hashmap" resultType="kr.co.wisenut.textminer.autoqa.vo.AutoQaCateInfoVo">
+		SELECT '0' AS "id"
+		     , 'WISENUT' AS "name"
+		     , 0 AS "depth"
+		     , '#' AS "parentId"
+		  FROM DUAL
+		UNION
+		SELECT CATEGORY_ID AS "id"
+		     , CATEGORY_NAME AS "name"
+		     , DEPTH AS "depth"
+		     , DECODE(DEPTH, 1, '0', PARENTS_CATEGORY_ID) AS "parentId"
+		  FROM WISETM_QA_CATEGORY
+		 ORDER BY "depth", "id"
+
+	</select>
 
 </mapper>
