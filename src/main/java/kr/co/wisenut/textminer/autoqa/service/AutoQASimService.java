@@ -36,6 +36,8 @@ public class AutoQASimService {
             resultMap.put("totalCount", totalCount);
             // 조회결과 리스트
             List<AutoQaSimScriptVo> resultList = autoQaMapper.getQASimScriptList(paramMap);
+
+            resultMap.put("resultList", resultList);
             System.out.println("AUTOQASIM resultList = " + resultList);
 
 //            resultMap.put("dataTable", convertHtmlTagForQAScriptList(resultList, Integer.parseInt(paramMap.get("pageRow").toString()), paramMap.get("contextPath").toString()));
