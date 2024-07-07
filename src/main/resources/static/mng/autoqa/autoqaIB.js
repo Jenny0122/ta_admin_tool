@@ -102,6 +102,7 @@ function fnCateTree() {
 					type: "POST",
 					url: contextPath + '/autoqaRest/getQAScriptLis',
 					success: function(data) {
+						console.log(data)
 
 						var row = ""
 						row = "<tr>\n"
@@ -307,28 +308,6 @@ const showPopupRowDetail = function(target, rowNum) {
 	}
 };
 
-// 팝업창 숨기기
-const hidePopup = function(target) {
-	let $target;
-	switch (target) {
-		case "create":
-			$target = $("#create_pop");
-			break;
-		case "update":
-			$target = $("#update_pop");
-			break;
-		case "download":
-			$target = $("#download_pop");
-			break;
-		case "sim_script":
-			$target = $("#sim_script_pop");
-			break;
-		default:
-			console.error(`Undefined popup target="${target}"`);
-	}
-	$target.find("input,select").val("");
-	$target.hide();
-};
 
 // 선택된 스크립트 삭제
 const deleteScript = function() {
