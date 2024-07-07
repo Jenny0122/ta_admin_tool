@@ -100,7 +100,7 @@
 		SELECT/* kr.co.wisenut.mapper.AutoQAMapper.getQASimScriptList */
             SCRIPT_ID AS "scriptId"			
             ,SIMILARITY_SCRIPT_ID AS "simScriptId"					
-            ,SIMILARITY_SCRIPT_CONT AS "similarityScriptCont"				
+            ,SIMILARITY_SCRIPT_CONT AS "simScriptCont"
             ,DEL_YN AS "delYn"						
             ,CRE_DT AS "creDt"						
             ,CRE_USER AS "creUser"						
@@ -108,8 +108,9 @@
             ,MOD_USER AS "modUser"	
 		FROM  WISETM_QA_SIMILARITY_SCRIPT
 		WHERE  1 = 1
-		<if test='pageRow != null and pageRow != ""'>
-		  AND  PAGE_ROW = #{pageRow}
+			AND DEL_YN = 'N'
+		<if test='similarity_script_id != null and similarity_script_id != ""'>
+			AND  SIMILARITY_SCRIPT_ID = #{similarityScriptId}
 		</if>
 	</select>
 	
@@ -159,10 +160,14 @@
 	
 	<!-- 유사스크립트 삭제 -->
 	<delete id="deleteQASimScript" parameterType="kr.co.wisenut.textminer.autoqa.vo.AutoQaSimScriptVo">
-		DELETE /* kr.co.wisenut.mapper.AutoQAMapper.deleteQASimScript*/
-		FROM   WISETM_QA_SIMILARITY_SCRIPT
+		UPDATE /* kr.co.wisenut.mapper.AutoQAMapper.deleteQASimScript*/
+		   WISETM_QA_SIMILARITY_SCRIPT
+		SET    DEL_YN = 'Y'
+			, MOD_DT = CURRENT_TIMESTAMP
+			, MOD_USER = #{modUser}
+
 		WHERE  SCRIPT_ID = #{scriptId}
-		AND SIMILARITY_SCRIPT_ID = #{simScriptId}) 
+		AND SIMILARITY_SCRIPT_ID = #{simScriptId})
 	</delete>
 	
 	

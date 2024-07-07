@@ -23,8 +23,16 @@ public interface AutoQAMapper {
 	
 	public List<AutoQaCateInfoVo> getCategoryNames(Map<String, Object> paramMap);		// 카테고리 정보 조회
 	public List<AutoQaKeywordVo> getkeywordDetail(Map<String, Object> paramMap);		// 키워드 조회 팝업
-	public List<AutoQaSimScriptVo>getSimScriptContDetail(Map<String, Object> paramMap);	// 유사문장 조회 팝업
-	
+
+
+
+	public List<AutoQaSimScriptVo>getQASimScriptList(Map<String, Object> paramMap);		// 유사문장 조회 팝업
+	public int getQASimScriptTotalCount(Map<String, Object> paramMap);					// 유사 스크립트 전체 카운트 조회
+
+	public int insertQASimScript(AutoQaSimScriptVo autoQaSimScriptVo);					// 유사 스크립트 등록
+	public int updateQASimScript(AutoQaSimScriptVo autoQaSimScriptVo);					// 유사 스크립트 수정
+	public int deleteQASimScript(AutoQaSimScriptVo autoQaSimScriptVo);					// 유사 스크립트 삭제
+
 	public int insertQAScript(AutoQaScriptVo autoqacate);								// 규정 스크립트 등록
 	public int updateQAScript(AutoQaScriptVo autoqacate);								// 규정 스크립트 수정
 	public int deleteQAScript(AutoQaScriptVo autoqacate);								// 규정 스크립트 삭제
