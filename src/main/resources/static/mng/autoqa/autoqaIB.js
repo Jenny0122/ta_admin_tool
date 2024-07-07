@@ -619,7 +619,43 @@ const isFormValid = function(serializeArray) {
 	return true;
 };
 
-const updateSimScript = function(simScriptId, simScriptCont) {
+const updateSimScript = function(simScriptId) {
+	var params = new Object()
+	params.simScriptId = simScriptId;
+	params.simScriptCont = $("#input_simscript_" + simScriptId).val();
+
+	$.ajax({
+		type: "POST",
+		url: `${contextPath}/autoqaRest/updateQASimScript`,
+		data: JSON.stringify(params), //default contentType: 'application/x-www-form-urlencoded'
+		beforeSend: function() {
+		},
+		success: function(data) {
+			alert(response.resultMsg);
+
+			if (response.result == "S") location.reload();
+			document.querySelector("#update_pop button[type=submit]").disabled = false;
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			console.debug(jqXHR);
+			console.debug(textStatus);
+			console.debug(errorThrown);
+			switch (jqXHR.status) {
+				case 403:
+					console.error("해당 유사 스크립트의 수정 권한이 없습니다.");
+					alert("해당 유사 스크립트의 수정 권한이 없습니다.");
+					break;
+				case 409:
+					console.error(jqXHR.responseText);
+					alert(`유사 스크립트 수정 실패. [${jqXHR.responseText}]`);
+					break;
+				default:
+					console.error("Failed to update AutoQAScript");
+					alert("유사 스크립트 추가 실패. 서버 연결 상태 및 로그를 확인하세요.");
+			}
+			document.querySelector("#update_pop button[type=submit]").disabled = false;
+		}
+	});
 
 }
 

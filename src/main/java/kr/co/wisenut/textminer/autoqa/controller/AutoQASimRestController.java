@@ -109,7 +109,7 @@ public class AutoQASimRestController {
             autoQaSimScriptVo.setModUser( user.getUserName() );
             resultMap = autoQASimService.updateQASimScript( autoQaSimScriptVo );
 
-            // 삭제 완료 후 이력 저장
+            // 수정 완료 후 이력 저장
             if( resultMap.get( "result" )
                          .toString()
                          .equals( "S" ) ) {
