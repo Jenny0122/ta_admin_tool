@@ -242,6 +242,9 @@ const hidePopup = function(target) {
 		case "download":
 			$target = $("#download_pop");
 			break;
+		case "sim_script":
+			$target = $("#sim_script");
+			break;
 		default:
 			console.error(`Undefined popup target="${target}"`);
 	}
