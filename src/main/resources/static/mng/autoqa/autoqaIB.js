@@ -628,9 +628,11 @@ const updateSimScript = function(simScriptId) {
 		type: "POST",
 		url: `${contextPath}/autoqaRest/updateQASimScript`,
 		data: JSON.stringify(params), //default contentType: 'application/x-www-form-urlencoded'
+		dataType : "json",
+		contentType: "application/json",
 		beforeSend: function() {
 		},
-		success: function(data) {
+		success: function(response) {
 			alert(response.resultMsg);
 
 			if (response.result == "S") location.reload();
@@ -660,12 +662,10 @@ const updateSimScript = function(simScriptId) {
 }
 
 const deleteSimScript = function(simScriptId) {
-	var params = new Object()
-	params.simScriptId = simScriptId;
 
 	$.ajax({
 		type: "DELETE",
-		url: `${contextPath}/autoqaRest/deleteQASimScript`,
+		url: `${contextPath}/autoqaRest/deleteQASimScript?simScriptId=` + simScriptId,
 		data: JSON.stringify(params), //default contentType: 'application/x-www-form-urlencoded'
 		beforeSend: function() {
 		},
