@@ -52,7 +52,7 @@ public class AutoQASimRestController {
      * 유사 스크립트 등록
      */
     @PostMapping( value = "/insertQASimScript" )
-    public Map<String, Object> insertQASimScript( AutoQaSimScriptVo autoQaSimScriptVo
+    public Map<String, Object> insertQASimScript(@RequestBody AutoQaSimScriptVo autoQaSimScriptVo
             , HttpServletRequest request
             , @AuthenticationPrincipal( errorOnInvalidType = true ) TmUser user ) {
 
@@ -96,7 +96,7 @@ public class AutoQASimRestController {
      * 유사 스크립트 수정
      */
     @PostMapping( "/updateQASimScript" )
-    public Map<String, Object> updateQASimScript( AutoQaSimScriptVo autoQaSimScriptVo
+    public Map<String, Object> updateQASimScript(@RequestBody AutoQaSimScriptVo autoQaSimScriptVo
             , HttpServletRequest request
             , @AuthenticationPrincipal( errorOnInvalidType = true ) TmUser user ) {
 
