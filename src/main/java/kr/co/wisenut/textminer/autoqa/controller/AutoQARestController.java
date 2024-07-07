@@ -22,7 +22,7 @@ import kr.co.wisenut.textminer.history.service.ActionHistoryService;
 import kr.co.wisenut.textminer.history.vo.ActionHistoryVo;
 import kr.co.wisenut.textminer.user.vo.TmUser;
 
-@Controller
+@RestController
 @RequestMapping("/autoqaRest")
 public class AutoQARestController {
 	
