@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.batch.mapper.CommonMapper">
+    
+    <!-- STT TA분석 완료상태 업데이트 -->
+    <update id="updateAnaStatus" parameterType="hashMap">
+    	UPDATE /* kr.co.wisenut.textminer.batch.mapper.CommonMapper.updateAnaStatus */
+    		   TB_WTM_IS_SESS
+    	SET	   
+    		   ANA_STATUS = #{anaStatus}
+    		<if test='anaStatus == "400300"'>
+		     , ANA_COMP_DT = CURRENT_TIMESTAMP
+			</if>
+    	WHERE  CALL_ID = #{applicationId}
+    </update>
+    
+     <!-- 분석 실패 - 세션 업데이트 -->
+    <update id="updateAnaFailed" parameterType="String">
+		UPDATE /* kr.co.wisenut.textminer.batch.mapper.CommonMapper.updateAnaFailed */
+    			TB_WTM_IS_SESS
+		SET	   ANA_STATUS = '400200'
+		WHERE  CALL_ID = #{value}
+    </update>
+    
+    <!-- 분석 실패(미 매칭) 정보 입력 -->
+    <insert id="insertNotMatch" parameterType="hashMap">
+		<selectKey resultType="int" keyProperty="id" order="BEFORE">
+		   SELECT COALESCE(MAX(ID),0) + 1 FROM TB_WTM_IS_BS_NOTMATCH
+		</selectKey>
+		
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.CommonMapper.insertNotMatch */
+    	INTO   TB_WTM_IS_BS_NOTMATCH (ID, CALL_ID, RESULT_CD, START_DT)
+    	VALUES ( 
+    		  #{id}
+    		, #{applicationId}
+    		, #{resultCd}
+    		, CURRENT_TIMESTAMP
+    	)
+    </insert>
+    
+    <!-- 미매칭 테이블 분석 완료 시간 업데이트 -->
+    <update id="updateNotMatch" parameterType="String">
+    	UPDATE /* kr.co.wisenut.textminer.batch.mapper.CommonMapper.updateNotMatch */
+    		   TB_WTM_IS_BS_NOTMATCH
+    	SET	   END_DT = CURRENT_TIMESTAMP
+    	WHERE  CALL_ID = #{applicationId}
+    		AND RESULT_CD = #{resultCd}
+    </update>
+    
+    <!-- 묵음시간 분석정보 업데이트 -->
+    <update id="updateMuteInfo" parameterType="kr.co.wisenut.textminer.batch.vo.SttContentsVo">
+    	UPDATE /* kr.co.wisenut.textminer.batch.mapper.CommonMapper.updateMuteInfo */
+    		   TB_WTM_IS_SESS
+    	SET	   MUTE_TIME = #{muteTime}
+    		 , MUTE_COUNT = #{muteCount}
+    	WHERE  CALL_ID = #{applicationId}
+    </update>
+    
+    <!-- 잔여 미매칭 resultCd 목록 조회 -->
+    <select id="getNotMatchList" parameterType="String" resultType="String">
+		SELECT /* kr.co.wisenut.textminer.batch.mapper.CommonMapper.getNotMatchList */
+			RESULT_CD AS "resultCd"
+		FROM 
+		    TB_WTM_IS_BS_NOTMATCH
+		WHERE 
+		    CALL_ID = #{value}
+		    AND END_DT IS NULL 
+	</select>
+    
+</mapper>

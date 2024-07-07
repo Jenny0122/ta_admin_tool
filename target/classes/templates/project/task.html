@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+<meta charset="utf-8">
+
+<head>
+    <title>서비스 관리</title>
+</head>
+
+<!-- Page passes the container for the graph to the program -->
+<!--<body onload="main(document.getElementById('drawcontainer'));">-->
+<!-- <body onload="main(document.getElementById('canvasArea'));"> -->
+<section layout:fragment="content">
+    <div class="cont_wrap">
+        <div class="cont_area log clearfix">
+            <div class="cont_tit clearfix">
+                <h2>서비스 관리</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>프로젝트</li>
+                    <li><span>&gt;</span><strong>서비스 관리</strong></li>
+                </ul>
+            </div>
+            <!--컬렉션 정보-->
+            <div class="cont_box mt0 fR">
+                <!--                <h3></h3>-->
+                <div class="container">
+                    <!--컬렉션 정보 table-->
+                    <table class="basic_tbl_type mt10 text-ellipsis" style="table-layout: fixed">
+                        <thead>
+
+                        <tr>
+                            <th>프로젝트</th>
+                            <th>프로젝트 설명</th>
+                            <th>서비스 구분</th>
+                            <th>서비스 모델</th>
+                            <th></th>
+                        </tr>
+
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>
+                    			<input type="hidden" id="projectId" th:value="${projectId}">
+                                <select id="choice_proj" class="w230" autofocus onchange="fnSelectProject()">
+                                    <option value="" selected disabled>프로젝트를 선택하세요</option>
+		                            <th:block th:each="project: ${projects}">
+										<option th:value="${project.projectId}" th:text="${project.projectName}" th:title="${project.projectDesc}"></option>
+									</th:block>
+                                </select>
+                            </td>
+                            <td id="proj_desc" >프로젝트 설명</td>
+                            <td>
+                                <select id="choice_task" class="w230" onchange="fnGetModel()">
+                                    <option value="" selected disabled>서비스 구분을 선택하세요</option>
+                                    <option value="AUTO_CLASSIFICATION" th:selected="${taskType=='AUTO_CLASSIFICATION'}? 'selected'">자동 분류</option>
+                                    <option value="EMOTION_ANALYZE" th:selected="${taskType=='EMOTION_ANALYZE'}? 'selected'">감성 분석</option>
+                                    <option value="DOCUMENT_SUMMARY" th:selected="${taskType=='DOCUMENT_SUMMARY'}? 'selected'">문서 요약</option>
+                                    <option value="KEYWORD_EXTRACTION" th:selected="${taskType=='KEYWORD_EXTRACTION'}? 'selected'">키워드 추출</option>
+                                    <option value="RELATED_EXTRACTION" th:selected="${taskType=='RELATED_EXTRACTION'}? 'selected'">연관어 추출</option>
+                                    <option value="EMOTION_PREPROECESS" th:selected="${taskType=='EMOTION_PREPROECESS'}? 'selected'">전처리(감성)</option>
+                                    <option value="SUMMARY_PREPROECESS" th:selected="${taskType=='SUMMARY_PREPROECESS'}? 'selected'">전처리(요약)</option>
+                                    <option value="STRING_MATCHER" th:selected="${taskType=='STRING_MATCHER'}? 'selected'">문자열 매칭</option>
+                                </select>
+                            </td>
+                            <td>
+                    			<input type="hidden" id="taskId" th:value="${taskId}">
+                                <select id="choice_model" class="w230" onchange="taskDataSet()">
+                                    <option value="" selected >서비스 모델을 선택하세요</option>
+                                    <th:block th:each="model :${modelList}">
+										<option th:text="${model.modelName}" th:value="${model.taskId}"></option>
+									</th:block>
+                                </select>
+                            </td>
+                            <td>
+                            	<!-- 삭제버튼은 등록된 서비스가 있는 경우에만 노출 -->
+                            	<button id="addBtn" type="button" class="btn btn_blue w98" onclick="addTask()"><i class="fas fa-plus"></i>추가</button>
+                            	<button id="saveBtn" type="button" class="btn btn_blue w98" onclick="saveTask()"><i class="far fa-save"></i>저장</button>
+                            	<button id="deleteBtn" type="button" class="btn btn_red w98" onclick="deleteTask()"><i class="fas fa-trash-alt mr10"></i>삭제</button>
+                            	<button id="cancelBtn" type="button" class="btn btn_red w98" onclick="cancelTask()"><i class="fas fa-trash-alt mr10"></i>취소</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <!--컬렉션 정보 table end-->
+                    <div class="mt30">
+                        <div id="drawcontainer">
+                        	<div id='LoadingImage' class='loading-LoadingImage' style="display:none;"><div style='margin-left:50%'><img th:src='@{/img/loading.gif}'></div></div>
+                    		<div id="drawArea">
+
+	                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 컬렉션 정보 -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+	<script type="text/javascript" th:src ="@{/mng/project/task.js}"></script>
+</section>
+</body>
+</html>

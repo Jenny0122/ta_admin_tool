@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.simulation.mapper.SimulationMapper">
+    
+    <!-- 시뮬레이션 조회 -->
+    <select id="getSimulationList" parameterType="kr.co.wisenut.textminer.project.vo.ProjectVo" resultType="hashMap">
+		
+		SELECT /* kr.co.wisenut.textminer.simulation.mapper.SimulationMapper.getSimulationList */
+			   WTP.PROJECT_ID AS "projectId"
+			 , WTP.PROJECT_NAME AS "projectName"
+			 , WTP.PROJECT_DESC AS "projectDesc"
+			 , WTT.TASK_ID AS "taskId"
+			 , WTT.MODEL_NAME AS "modelName"
+			 , WTT.CRE_DT AS "creDt"
+		FROM   WISETM_PROJECTS WTP
+		INNER JOIN WISETM_TASK WTT
+				ON WTP.PROJECT_ID = WTT.PROJECT_ID
+		WHERE  1 = 1
+		  AND  WTT.MODEL_FILE IS NOT NULL
+		<if test='projectId != null and projectId != 0'>
+		  AND  WTP.PROJECT_ID = #{projectId} 
+		</if>
+		<if test='role != "[ADMIN]"'>
+		  AND  WTP.PROJECT_OWNER = #{projectOwner}
+		</if>
+		ORDER BY "projectId", "taskId", "creDt" DESC
+    </select>
+    
+    
+</mapper>

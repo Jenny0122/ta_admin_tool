@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.common.mapper.ImportProgressMapper">
+
+	<!-- 업로드 파일 리스트 조회 -->
+    <select id="getFileList" parameterType="kr.co.wisenut.textminer.common.vo.ImportProgressVo" resultType="kr.co.wisenut.textminer.common.vo.ImportProgressVo">
+		SELECT /* kr.co.wisenut.textminer.common.mapper.ImportProgressMapper.getFileList */
+			   *
+		FROM ( 
+				<include refid="selectTable"></include> 
+			 ) T
+		WHERE  1 = 1
+		  AND  resourceId = #{resourceId}
+		  AND  resourceType = #{resourceType}
+		<if test='fileName != null and fileName != ""'>
+		  AND  fileName = #{fileName} 
+		</if>
+		<if test='progress != null and progress != ""'>
+		  AND  progress != #{progress} 
+		</if>
+    </select>
+
+	<!-- 업로드 파일 상세 조회 -->
+    <select id="getImportProgressDetail" parameterType="kr.co.wisenut.textminer.common.vo.ImportProgressVo" resultType="kr.co.wisenut.textminer.common.vo.ImportProgressVo">
+		SELECT /* kr.co.wisenut.textminer.common.mapper.ImportProgressMapper.getImportProgressDetail */
+			   *
+		FROM ( <include refid="selectTable"></include> 
+			 ) T
+		WHERE  1 = 1
+		  AND  resourceId = #{resourceId}
+		  AND  resourceType = #{resourceType}
+		<if test='importId != null and importId != 0'>
+		  AND  importId = #{importId}
+		</if>
+		<if test='fileName != null and fileName != ""'>
+		  AND  fileName = #{fileName} 
+		</if>
+    </select>
+    
+    <!-- 작업결과 저장 -->
+    <insert id="insertImportProgress" parameterType="kr.co.wisenut.textminer.common.vo.ImportProgressVo">
+    	<selectKey resultType="int" keyProperty="importId" order="BEFORE">
+			SELECT COALESCE(MAX(IMPORT_ID),0) + 1 FROM WISETM_IMPORT_PROGRESS
+		</selectKey>
+    
+    	INSERT /* kr.co.wisenut.textminer.common.mapper.ImportProgressMapper.insertImportProgress */
+    	INTO   WISETM_IMPORT_PROGRESS (IMPORT_ID, RESOURCE_TYPE, RESOURCE_ID, FILE_NAME, LAST_MODIFIED, FILE_SIZE, TOTAL_COUNT, VALID_COUNT, ERROR_HANDLE, PROGRESS, LOG_TEXT, IMPORT_DT)
+    	VALUES ( #{importId}
+    		   , #{resourceType}
+    		   , #{resourceId}
+    		   , #{fileName}
+    		   , #{lastModified}
+    		   , #{fileSize}
+    		   , #{totalCount}
+    		   , #{validCount}
+    		   , #{errorHandle}
+    		   , #{progress}
+    		   , #{logText}
+    		   , CURRENT_TIMESTAMP
+    		   )
+    </insert>
+        
+    <!-- 작업결과 삭제 -->
+    <delete id="deleteImportProgress" parameterType="kr.co.wisenut.textminer.common.vo.ImportProgressVo">
+    	DELETE /* kr.co.wisenut.textminer.common.mapper.ImportProgressMapper.deleteImportProgress */
+    	FROM   WISETM_IMPORT_PROGRESS
+    	WHERE  RESOURCE_ID = #{resourceId}
+    	  AND  RESOURCE_TYPE = #{resourceType}
+    </delete>
+    
+    <sql id="selectTable">
+    	SELECT IMPORT_ID AS importId
+			 , RESOURCE_TYPE AS resourceType
+			 , RESOURCE_ID AS resourceId
+			 , FILE_NAME AS fileName
+			 , DATE_FORMAT(LAST_MODIFIED, '%Y.%m.%d') AS lastModified
+			 , FILE_SIZE AS fileSize
+			 , TOTAL_COUNT AS totalCount
+			 , VALID_COUNT AS validCount
+			 , ERROR_HANDLE AS errorHandle
+			 , PROGRESS AS progress
+			 , LOG_TEXT AS logText
+			 , DATE_FORMAT(IMPORT_DT, '%Y.%m.%d') AS importDt
+		FROM   WISETM_IMPORT_PROGRESS
+    </sql>
+</mapper>

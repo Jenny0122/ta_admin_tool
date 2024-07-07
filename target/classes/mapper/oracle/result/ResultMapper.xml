@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- TmInterface에서 처리 - 사용안함 -->
+<mapper namespace="kr.co.wisenut.textminer.result.mapper.ResultMapper">
+	
+	<resultMap id="resultJsonMap" type="hashmap">
+		<result property="resultJson" column="resultJson" jdbcType="CLOB" javaType="java.lang.String" />
+	</resultMap>
+	
+    <!-- 결과 조회 -->
+    <select id="getResultList" parameterType="hashmap" resultMap="resultJsonMap">
+		SELECT /* kr.co.wisenut.textminer.result.mapper.ResultMapper.getResultList */
+			   /* JSON_ARRAYAGG(RESULT_CONTENT RETURNING CLOB) AS "resultJson" */
+			   RESULT_CONTENT AS "resultJson"
+		FROM   WISETM_ANALYZE_RESULT
+		WHERE  TASK_ID = #{taskId}
+		  AND  PROJECT_ID = #{projectId}
+		ORDER BY RESULT_ID
+    </select>
+    
+    <!-- 결과 저장 -->
+    <insert id="insertResult" parameterType="hashmap">
+    	/* kr.co.wisenut.textminer.result.mapper.ResultMapper.insertResult */
+    	<foreach collection="paramList" item="item" index="index" separator=" " open="INSERT ALL" close="SELECT * FROM DUAL">
+    	INTO   WISETM_ANALYZE_RESULT
+    	VALUES ( #{item.resultId}
+	    	   , #{item.taskId}
+	    	   , #{item.projectId}
+	    	   , #{item.resultContent}
+	    	   )
+    	</foreach>
+    </insert>
+    
+    <!-- 결과 삭제 -->
+    <delete id="deleteResult" parameterType="hashmap">
+    	DELETE /* kr.co.wisenut.textminer.result.mapper.ResultMapper.deleteResult */
+    		   FROM   WISETM_ANALYZE_RESULT
+		WHERE  TASK_ID = #{taskId}
+		  AND  PROJECT_ID = #{projectId}
+    </delete>
+</mapper>

@@ -1,0 +1,11 @@
+alreadyConnected=연결할 수 없는 노드입니다.
+containsValidationErrors=유효성 검사 오류 포함
+updatingDocument=Updating Document. Please wait...
+updatingSelection=Updating Selection. Please wait...
+collapse-expand=Collapse/Expand
+doubleClickOrientation=드래그 하여 위치를 변경합니다
+close=Close
+error=Error
+done=Done
+cancel=Cancel
+ok=OK

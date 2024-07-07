@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+
+<head>
+    <title>모듈 관리</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>모듈 관리</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>프로젝트</li>
+                    <li><span>&gt;</span><strong>모듈 관리</strong></li>
+                </ul>
+            </div>
+            <div class="cont_box m0" style="margin-top: unset">
+                <div class="container">
+                    <div class="cont1 clearfix">
+                        <div class="fR">
+                            <button type="button" class="btn btn_blue w98 ml5" onclick="showPopup('create');">
+                            	<i class="fas fa-plus mr5"></i> 추가
+                            </button>
+                            <button type="button" id="rebootAllBtn" class="btn btn_red w120 ml5" onclick="rebootAllServer();">
+                            	<i class="fas fa-power-off mr5"></i> 일괄 재시작
+                            </button>
+                        </div>
+                    </div>
+                    <!--프로젝트 table-->
+                    <table class="basic_tbl_type mt20 text-ellipsis">
+                        <colgroup>
+                            <col width="5%;"/>
+                            <col width="5%;"/>
+                            <col width="6%;"/>
+                            <col width="3%;"/> 
+                            <col width="12%;"/>
+                            <col width="12%;"/>
+                            <col width="6%;"/>
+                            <col width="15%"/>
+                            <col width="5%"/>
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th>IP</th>
+                            <th>서비스</th>
+                            <th>Port</th>
+                            <th>구분</th>
+                            <th>모듈 이름</th>
+                            <th>설명</th>
+                            <th>상태</th>
+                            <th>작업</th>
+                            <th>배포</th>
+                        </tr>
+                        </thead>
+                        
+						<div id="listArea">
+							<tbody id="deploy_table_body">
+                        	</tbody>
+						</div>
+                    </table>
+                    <!--프로젝트 table end -->
+                </div>
+                <!-- container end-->
+            </div>
+            <!-- cont_box end -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+    <!-- cont_wrap end-->
+
+    <!-- 배포 서버 정보 추가 팝업-->
+    <div id="create_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall" >
+            <div class="top clearfix">
+                <h3 class="fL">서버 등록</h3>
+                <a href="#" class="close_create close fR" onclick="hidePopup('create');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+
+            <form onsubmit="return createDeploy();">
+                <div class="pop_container" style="height:480px;">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+							<div>
+								<label for="server_name">서버 이름</label>
+								<input type="text" id="server_name" name="serverName" class="w230" required="required" placeholder="예시) 서버1" >
+							</div>
+							<div class="mt20">
+								<label for="server_ip">IP : PORT</label>
+								<input type="text" id="server_ip" name="serverIp" class="w135" required="required" maxlength="20"
+										placeholder="000.000.000.000">
+								&nbsp;:&nbsp;
+								<input type="text" id="server_port" name="serverPort" class="w80" required="required" maxlength="5">
+							</div>
+							<div class="mt20">
+								<label for="server_type">서버 구분</label>
+								<select id="server_type" name="serverType" class="w230">
+									<option value="" selected disabled>선택하세요</option>
+									<option value="TEST">TEST</option>
+									<option value="PROD">PROD</option>
+									<option value="EPRS">EPRS (감성 전처리용)</option>
+									<option value="SPRS">SPRS (요약 전처리용)</option>
+								</select>
+							</div>
+							<div class="mt20">
+								<label for="server_task">서비스 구분</label>
+								<select id="server_task" name="serverTask" class="w230">
+									<option value="" selected disabled>선택하세요</option>
+                                    <option value="AUTO_CLASSIFICATION">자동 분류</option>
+                                    <option value="EMOTION_ANALYZE">감성 분석</option>
+                                    <option value="DOCUMENT_SUMMARY">문서 요약</option>
+                                    <option value="KEYWORD_EXTRACTION">키워드 추출</option>
+                                    <option value="RELATED_EXTRACTION">연관어 추출</option>
+                                    <option value="EMOTION_PREPROECESS">전처리(감성)</option>
+                                    <option value="SUMMARY_PREPROECESS">전처리(요약)</option>
+                                    <option value="STRING_MATCHER">문자열 매칭</option>
+								</select>
+							</div>
+							<div class="mt20">
+								<label for="server_desc">설명</label>
+								<textarea rows="6" class="w230" id="server_desc" name="serverDesc" required="required"
+										maxlength="1000" placeholder="예시) 자동분류 테스트 모듈 리스너 "></textarea>
+							</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98" onclick="trimInputFields()"> 등록</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    <!--배포 서버 정보 추가 팝업 end-->
+
+    <!-- 배포 서버 정보 수정 팝업-->
+    <div id="update_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall">
+            <div class="top clearfix">
+                <h3 class="fL">서버 수정</h3>
+                <a href="#" class="close_update close fR" onclick="hidePopup('update');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+
+            <form onsubmit="return updateDeploy();">
+                <div class="pop_container" style="height:480px;">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+							<div>
+								<label for="server_nameUP">서버 이름</label>
+								<input type="hidden" id="server_id" name="serverId">
+								<input type="text" id="server_nameUP" name="serverName" class="w230" required="required" placeholder="예시) 서버1">
+							</div>
+							<div class="mt20">
+								<label for="server_ipUP">IP : PORT</label>
+								<input type="text" id="server_ipUP" name="serverIp" class="w135" required="required" maxlength="20"
+										placeholder="000.00.00.000">
+								&nbsp;:&nbsp;
+								<input type="text" id="server_portUP" name="serverPort" class="w80" required="required" maxlength="5">
+							</div>
+							<div class="mt20">
+								<label for="server_typeUP">서버 구분</label>
+								<select id="server_typeUP" name="serverType" class="w230" disabled>
+									<option value="" selected disabled>선택하세요</option>
+									<option value="TEST">TEST</option>
+									<option value="PROD">PROD</option>
+									<option value="EPRS">EPRS (감성 전처리용)</option>
+									<option value="SPRS">SPRS (요약 전처리용)</option>
+								</select>
+							</div>
+							<div class="mt20">
+								<label for="server_taskUP">서비스 구분</label>
+								<select id="server_taskUP" name="serverTask" class="w230" disabled>
+									<option value="" selected disabled>선택하세요</option>
+                                    <option value="AUTO_CLASSIFICATION">자동 분류</option>
+                                    <option value="EMOTION_ANALYZE">감성 분석</option>
+                                    <option value="DOCUMENT_SUMMARY">문서 요약</option>
+                                    <option value="KEYWORD_EXTRACTION">키워드 추출</option>
+                                    <option value="RELATED_EXTRACTION">연관어 추출</option>
+                                    <option value="EMOTION_PREPROECESS">전처리(감성)</option>
+                                    <option value="SUMMARY_PREPROECESS">전처리(요약)</option>
+                                    <option value="STRING_MATCHER">문자열 매칭</option>
+								</select>
+							</div>
+							<div class="mt20">
+								<label for="server_descUP">설명</label>
+								<textarea rows="6" class="w230" id="server_descUP" name="serverDesc" required="required"
+										maxlength="1000" placeholder="예시) 자동분류 테스트 모듈 리스너 "></textarea>
+							</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98" onclick="trimInputFields()"> 수정</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!--배포 서버 정보 수정 팝업 end-->
+    
+    <!-- 배포 팝업-->
+    <div id="deploy_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall">
+            <div class="top clearfix">
+                <h3 class="fL">배포 모듈</h3>
+                <a href="#" class="close_update close fR" onclick="hidePopup('deploy');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+
+            <form onsubmit="return startDeploy();">
+                <div class="pop_container">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+							<input type="hidden" id="server_id_deploy" name="serverId">
+							<input type="hidden" id="server_ip_deploy" name="serverIp">
+							<input type="hidden" id="server_port_deploy" name="serverPort">
+							<!--todo: 팝업 형태 및 데이터 확인 필요-->
+							<div>
+								<select id="task_id" name="taskId" class="w350"required="required">-->
+									<option value="">배포 모델을 선택 하세요.</option>
+								</select>
+							</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98"> 배포</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!--배포 팝업 end-->
+
+    <script type="text/javascript" th:src ="@{/mng/deploy/deploy.js}"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            // 사용성 - table tr 에 click 이벤트 등록
+            //radioByTableRowClick("tr[class^=project-]");
+
+            // 프로젝트 상태 업데이트
+            //refreshTaskStatus();
+            /*const statusCheckInterval = setInterval(function asyncImportStatusCheck() {
+                refreshTaskStatus();
+            }, 5000);
+            setTimeout(clearInterval(statusCheckInterval), 60 * 3);*/
+
+        });
+
+    </script>
+</section>
+
+</body>
+
+</html>

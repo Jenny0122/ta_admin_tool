@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+
+<head>
+    <title>스케줄 현황</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>스케줄 현황</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>프로젝트</li>
+                    <li><span>&gt;</span><strong>스케줄 현황</strong></li>
+                </ul>
+            </div>
+            <div class="cont_box m0" style="margin-top: unset">
+                <h3 id="totalCount"></h3>
+                <div class="container">
+                	<!--
+                    <div class="cont1 clearfix">
+                        <div class="fR">
+                            <button type="button" class="btn btn_blue w98 ml5" onclick="showPopup('create');"><i
+                                    class="fas fa-plus mr5"></i> 등록
+                            </button>
+                            <button type="button" class="btn btn_blue w98 ml5" onclick="none"><i
+                                    class="fas fa-play mr5"></i> 시작
+                            </button>
+                            <button type="button" class="btn btn_blue w98 ml5" onclick="none"><i
+                                    class="fas fa-stop mr5"></i> 정지
+                            </button>
+                            <button type="button" class="btn btn_blue w98 ml5" onclick="showPopup('update');"><i
+                                    class="fas fa-edit  mr5"></i> 수정
+                            </button>
+                            <button type="button" class="btn btn_red w98 ml5" onclick="deleteSchedule();"><i
+                                    class="fas fa-trash-alt  mr5"></i> 삭제
+                            </button>
+                        </div>
+                    </div>
+                    -->
+                    <!--프로젝트 table-->
+                    <table class="basic_tbl_type mt20 text-ellipsis">
+                        <colgroup>
+                            <!-- <col width="4%;"> -->
+                            <col width="20%;">
+                            <col width="10%;">
+                            <col width="8%;">
+                            <col width="15%;">
+                            <col width="15%;">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <!-- <th>선택</th> -->
+                            <th>스케줄</th>
+                            <th>수행시간 / 반복주기</th>
+                            <th>사용 여부</th>
+                            <th>마지막 실행일시</th>
+                            <th>마지막 실행결과</th>
+                        </tr>
+                        </thead>
+                        
+						<div id="listArea"></div>
+                        
+                        <tbody id="schedule_table_body">
+                        </tbody>
+                    </table>
+                    <p>* 스케줄 등록은 <b>관리자에게 문의</b>하시기 바랍니다.</p>
+                    <!--프로젝트 table end -->
+                </div>
+                <!-- container end-->
+            </div>
+            <!-- cont_box end -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+    <!-- cont_wrap end-->
+
+    <!-- 스케줄 추가 팝업-->
+    <!--
+    <div id="create_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall w600" >
+            <div class="top clearfix">
+                <h3 class="fL">스케줄 등록</h3>
+                <a href="#" class="close_create close fR" onclick="hidePopup('create');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+
+            <form onsubmit="return createSchedule();">
+                <div class="pop_container">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+							<div>
+								<label for="schedule_name">스케줄 이름</label>
+								<input type="text" id="schedule_name" name="scheduleName" class="w230" required="required" maxlength="20"
+										placeholder="예시) 스케줄1">
+							</div>
+							<div class="mt20">
+								<label for="schedule_date">기간</label>
+								<input type="text" id="start_dt" name="startDt" class="w110" required="required">
+								~
+								<input type="text" id="end_dt" name="endDt" class="w110" required="required" style="margin-right: 10px;">
+								<input type="checkbox" id="no_end_dt" name="noEndDt" onchange="changeEndDt();"> 종료 일자 미정
+							</div>
+							<div class="mt20">
+								<label for="schedule_type">스케줄 유형</label>
+								<input type="hidden" id='schedule_type' name="scheduleType">
+								<input type="radio" id="schedule_deploy" name="scheduleTypeR" checked> 배포
+								<input type="radio" id="schedule_batch" name="scheduleTypeR" style="margin-left: 10px;"> 배치
+							</div>
+							<div class="mt20">
+								<label for="schedule_interval">반복 주기</label>
+								<select id="start_time" name="startTime" class="w20">
+									<option value="0">0</option>
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+									<option value="8">8</option>
+									<option value="9">9</option>
+									<option value="10">10</option>
+									<option value="11">11</option>
+									<option value="12">12</option>
+									<option value="13">13</option>
+									<option value="14">14</option>
+									<option value="15">15</option>
+									<option value="16">16</option>
+									<option value="17">17</option>
+									<option value="18">18</option>
+									<option value="19">19</option>
+									<option value="20">20</option>
+									<option value="21">21</option>
+									<option value="22">22</option>
+									<option value="23">23</option>
+								</select>
+								~
+								<select id="end_time" name="endTime" class="w20">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+									<option value="8">8</option>
+									<option value="9">9</option>
+									<option value="10">10</option>
+									<option value="11">11</option>
+									<option value="12">12</option>
+									<option value="13">13</option>
+									<option value="14">14</option>
+									<option value="15">15</option>
+									<option value="16">16</option>
+									<option value="17">17</option>
+									<option value="18">18</option>
+									<option value="19">19</option>
+									<option value="20">20</option>
+									<option value="21">21</option>
+									<option value="22">22</option>
+									<option value="23">23</option>
+									<option value="24">24</option>
+								</select>
+								<select id="execute_interval" name="executeInterval" style="margin-left: 10px;" class="w20">
+									<option value="5">5분</option>
+									<option value="10">10분</option>
+									<option value="15">15분</option>
+									<option value="20">20분</option>
+									<option value="25">25분</option>
+									<option value="30">30분</option>
+									<option value="35">35분</option>
+									<option value="40">40분</option>
+									<option value="45">45분</option>
+									<option value="50">50분</option>
+									<option value="55">55분</option>
+									<option value="60">60분</option>
+								</select>
+							</div>
+							<div class="mt20">
+								<label for="use_yn">사용여부</label>
+								<input type="hidden" id="use_yn" name="useYn">
+								<input type="radio" id="use_y" name="useYnR" value="Y" checked> 사용
+								<input type="radio" id="use_n" name="useYnR" value="N" style="margin-left: 10px;"> 미사용
+							</div>
+							<div id="deploy_only">
+								<div class="mt20">
+									<label for="project_id">프로젝트</label>
+									<select id="project_id" name="projectId" class="w230" required="required">
+	
+									</select>
+								</div>
+								<div class="mt20">
+									<label for="task_id">작업 서비스</label>
+									<select id="task_id" name="taskId" class="w230" required="required">
+										
+									</select>
+								</div>
+							</div>
+							<div class="mt20" id="batch_only" style="display:none;">
+								<label for="program_id">프로그램</label>
+								<select id="program_id" name="programId" class="w230">
+									
+								</select>
+							</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98" onclick="trimInputFields()"> 등록</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    -->
+    <!--스케줄 추가 팝업 end-->
+
+    <!-- 스케줄 수정 팝업-->
+    <!-- 
+    <div id="update_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall w600">
+            <div class="top clearfix">
+                <h3 class="fL">스케줄 수정</h3>
+                <a href="#" class="close_update close fR" onclick="hidePopup('update');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+
+            <form onsubmit="return updateSchedule();">
+                <div class="pop_container">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+							<div>
+								<label for="schedule_nameUP">스케줄 이름</label>
+								<input type="hidden" id="schedule_idUP" name="scheduleId">
+								<input type="text" id="schedule_nameUP" name="scheduleName" class="w230" required="required" maxlength="20"
+										placeholder="예시) 스케줄1">
+							</div>
+							<div class="mt20">
+								<label for="schedule_dateUP">기간</label>
+								<input type="text" id="start_dtUP" name="startDt" class="w110">
+								~
+								<input type="text" id="end_dtUP" name="endDt" class="w110" style="margin-right: 10px;">
+								<input type="checkbox" id="no_end_dtUP" name="noEndDt" onchange="changeEndDt();"> 종료 일자 미정
+							</div>
+							<div class="mt20">
+								<label for="schedule_typeUP">스케줄 유형</label>
+								<input type="hidden" id='schedule_typeUP' name="scheduleType">
+								<input type="radio" id="schedule_deployUP" name="scheduleTypeUPR" value="deploy"> 배포
+								<input type="radio" id="schedule_batchUP" name="scheduleTypeUPR" value="batch" style="margin-left: 10px;"> 배치
+							</div>
+							<div class="mt20">
+								<label for="schedule_intervalUP">반복 주기</label>
+								<select id="start_timeUP" name="startTime" class="w20">
+									<option value="0">0</option>
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+									<option value="8">8</option>
+									<option value="9">9</option>
+									<option value="10">10</option>
+									<option value="11">11</option>
+									<option value="12">12</option>
+									<option value="13">13</option>
+									<option value="14">14</option>
+									<option value="15">15</option>
+									<option value="16">16</option>
+									<option value="17">17</option>
+									<option value="18">18</option>
+									<option value="19">19</option>
+									<option value="20">20</option>
+									<option value="21">21</option>
+									<option value="22">22</option>
+									<option value="23">23</option>
+								</select>
+								~
+								<select id="end_timeUp" name="endTime" class="w20">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3">3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+									<option value="7">7</option>
+									<option value="8">8</option>
+									<option value="9">9</option>
+									<option value="10">10</option>
+									<option value="11">11</option>
+									<option value="12">12</option>
+									<option value="13">13</option>
+									<option value="14">14</option>
+									<option value="15">15</option>
+									<option value="16">16</option>
+									<option value="17">17</option>
+									<option value="18">18</option>
+									<option value="19">19</option>
+									<option value="20">20</option>
+									<option value="21">21</option>
+									<option value="22">22</option>
+									<option value="23">23</option>
+									<option value="24">24</option>
+								</select>
+								<select id="execute_intervalUp" name="ExecuteInterval" style="margin-left: 10px;" class="w20">
+									<option value="5">5분</option>
+									<option value="10">10분</option>
+									<option value="15">15분</option>
+									<option value="20">20분</option>
+									<option value="25">25분</option>
+									<option value="30">30분</option>
+									<option value="35">35분</option>
+									<option value="40">40분</option>
+									<option value="45">45분</option>
+									<option value="50">50분</option>
+									<option value="55">55분</option>
+									<option value="60">60분</option>
+								</select>
+							</div>
+							<div class="mt20">
+								<label for="use_ynUP">사용여부</label>
+								<input type="hidden" id='use_ynUP' name="useYn">
+								<input type="radio" id="use_yUP" name="useYnUPR" value="Y" /> 사용
+								<input type="radio" id="use_nUP" name="useYnUPR" value="N" style="margin-left: 10px;" /> 미사용
+							</div>
+							<div id="deploy_onlyUP">
+								<div class="mt20">
+									<label for="project_idUP">프로젝트</label>
+									<select id="project_idUP" name="projectId" class="w230">
+										
+									</select>
+								</div>
+								<div class="mt20">
+									<label for="task_idUP">작업 서비스</label>
+									<select id="task_idUP" name="taskId" class="w230">
+										
+									</select>
+								</div>
+							</div>
+							<div class="mt20" id="batch_onlyUP" >
+								<label for="program_idUP">프로그램</label>
+								<select id="program_idUP" name="programId" class="w230">
+									
+								</select>
+							</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98" onclick="trimInputFields()"> 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    -->
+    <!--스케줄 수정 팝업 end-->
+    
+    <script type="text/javascript" th:src ="@{/js/datepicker/moment.min.js}"></script>
+    <script type="text/javascript" th:src ="@{/js/datepicker/daterangepicker.min.js}"></script>
+    <script type="text/javascript" th:src ="@{/mng/project/schedule.js}"></script>
+
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            // 사용성 - table tr 에 click 이벤트 등록
+            //radioByTableRowClick("tr[class^=project-]");
+
+            // 프로젝트 상태 업데이트
+            //refreshTaskStatus();
+            /*const statusCheckInterval = setInterval(function asyncImportStatusCheck() {
+                refreshTaskStatus();
+            }, 5000);
+            setTimeout(clearInterval(statusCheckInterval), 60 * 3);*/
+
+        });
+
+    </script>
+</section>
+
+</body>
+
+</html>

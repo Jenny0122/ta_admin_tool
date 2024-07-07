@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.autoqa.mapper.AutoQAMapper">
+
+	<!-- 스크립트 전체 건수 조회 -->
+	<select id="getQAScriptTotalCount" parameterType="hashmap" resultType="int">
+		SELECT /* kr.co.wisenut.mapper.AutoQAMapper.getQAScriptTotalCount */
+			   COUNT(*) AS "totalCount"
+		FROM  <include refid="selectTable"></include>
+	</select>
+	
+	<!-- 스크립트 리스트 조회 -->
+	<select id="getQAScriptList" parameterType="hashmap" resultType="kr.co.wisenut.textminer.autoqa.vo.AutoQaScriptVo">
+		SELECT/* kr.co.wisenut.mapper.AutoQAMapper.getQAScriptList */
+            CATEGORY_ID AS "categoryId"
+            ,SCRIPT_ID AS "scriptId"						
+            ,SCRIPT_CONT AS "scriptCont"					
+            ,COMPLIANCE_ITEM_CD AS "complianceItemCd"				
+            ,SCORE AS "score"						
+            ,QA_ORDER AS "order"						
+            ,DEL_YN AS "delYn"	
+		FROM  <include refid="selectTable"></include>
+		WHERE  1 = 1
+		<if test='pageRow != null and pageRow != ""'>
+		  AND  PAGE_ROW = #{pageRow}
+		</if>
+	</select>
+	
+	<!-- 스크립트 등록 -->
+	<insert id="insertQAScript" parameterType="kr.co.wisenut.textminer.autoqa.vo.AutoQaScriptVo">
+		<selectKey resultType="int" keyProperty="scriptid" order="BEFORE">
+			SELECT COALESCE(MAX(SCRIPT_ID),0) + 1 FROM WISETM_QA_SCRIPT
+		</selectKey>
+		
+		INSERT /* kr.co.wisenut.mapper.AutoQAMapper.insertQAScript */
+		/* INTO  FROM  WISETM_QA_SCRIPT (SCRIPT_ID,SCRIPT_CONT ,COMPLIANCE_ITEM_CD ,SCORE ,ORDER ,DEL_YN ,CRE_DT ,CRE_USER ,MOD_DT, CATEGORY_ID) */
+		INTO WISETM_QA_SCRIPT
+			(SCRIPT_ID
+			,SCRIPT_CONT
+			,COMPLIANCE_ITEM_CD
+			,SCORE
+			,QA_ORDER
+			,DEL_YN
+			,CRE_DT
+			,CRE_USER
+			,MOD_DT
+			,MOD_USER
+			,CATEGORY_ID)
+		VALUES ( 
+		     ,'1'	
+             ,#{scriptCont}					
+             ,#{complianceItemCd}			
+             ,#{score}						
+             ,#{order}						
+             ,#{delYn}						
+             , CURRENT_TIMESTAMP						
+             ,#{creUser}				
+             , CURRENT_TIMESTAMP				
+             ,#{modUser}
+			 ,#{categoryId}) 
+	</insert>
+	
+	<!-- 스크립트 수정 -->
+	<update id="updateQAScript" parameterType="kr.co.wisenut.textminer.autoqa.vo.AutoQaScriptVo">
+		UPDATE /* kr.co.wisenut.mapper.AutoQAMapper.updateQAScript */
+			   WISETM_QA_SCRIPT
+		SET    MOD_DT = CURRENT_TIMESTAMP
+			 , MOD_USER = #{modUser}
+		<if test='scriptCont != null and scriptCont != ""'>, SCRIPT_CONT = #{scriptCont}</if>
+		<if test='complianceItemCd != null and complianceItemCd != ""'>, COMPLIANCE_ITEM_CD = #{complianceItemCd}</if>
+		<if test='score != null and score != ""'>, SCORE = #{score}</if>
+		<if test='order != null and order != ""'>, QA_ORDER = #{order}</if>
+		<if test='delYn != null and delYn != ""'>, DEL_YN = #{delYn}</if>
+		WHERE  SCRIPT_ID = #{scriptId}
+		AND CATEGORY_ID = #{categoryId}) 
+	</update>
+	
+	<!-- 스크립트 삭제 -->
+	<delete id="deleteQAScript" parameterType="kr.co.wisenut.textminer.autoqa.vo.AutoQaScriptVo">
+		DELETE /* kr.co.wisenut.mapper.AutoQAMapper.deleteQAScript*/
+		FROM   WISETM_QA_SCRIPT
+		WHERE  SCRIPT_ID = #{scriptId}
+		AND CATEGORY_ID = #{categoryId}) 
+	</delete>
+	
+	
+	<!-- 유사스크립트  -->
+	<!-- 유사스크립트 전체 건수 조회 -->
+	<select id="getQASimScriptTotalCount" parameterType="hashmap" resultType="int">
+		SELECT /* kr.co.wisenut.mapper.AutoQAMapper.getQASimScriptTotalCount */
+			   COUNT(*) AS "totalCount"
+		FROM  WISETM_QA_SIMILARITY_SCRIPT
+	</select>
+	
+	<!-- 유사스크립트 리스트 조회 -->
+	<select id="getQASimScriptList" parameterType="hashmap" resultType="kr.co.wisenut.textminer.autoqa.vo.AutoQaSimScriptVo">
+		SELECT/* kr.co.wisenut.mapper.AutoQAMapper.getQASimScriptList */
+            SCRIPT_ID AS "scriptId"			
+            ,SIMILARITY_SCRIPT_ID AS "simScriptId"					
+            ,SIMILARITY_SCRIPT_CONT AS "similarityScriptCont"				
+            ,DEL_YN AS "delYn"						
+            ,CRE_DT AS "creDt"						
+            ,CRE_USER AS "creUser"						
+            ,MOD_DT AS "modDt"						
+            ,MOD_USER AS "modUser"	
+		FROM  WISETM_QA_SIMILARITY_SCRIPT
+		WHERE  1 = 1
+		<if test='pageRow != null and pageRow != ""'>
+		  AND  PAGE_ROW = #{pageRow}
+		</if>
+	</select>
+	
+	<!-- 유사스크립트 등록 -->
+	<insert id="insertQASimScript" parameterType="kr.co.wisenut.textminer.autoqa.vo.AutoQaSimScriptVo">
+		<selectKey resultType="int" keyProperty="scriptid" order="BEFORE">
+			SELECT COALESCE(MAX(SIMILARITY_SCRIPT_ID),0) + 1 FROM WISETM_QA_SIMILARITY_SCRIPT
+		</selectKey>
+		
+		INSERT /* kr.co.wisenut.mapper.AutoQAMapper.insertQASimScript */
+		/* INTO  FROM  WISETM_QA_SIMILARITY_SCRIPT (SCRIPT_ID,SIMILARITY_SCRIPT_ID ,SIMILARITY_SCRIPT_CONT ,DEL_YN ,CRE_DT ,CRE_USER ,MOD_DT) */
+		INTO   FROM  WISETM_QA_SIMILARITY_SCRIPT
+			(SCRIPT_ID
+			,SIMILARITY_SCRIPT_ID
+			,SIMILARITY_SCRIPT_CONT
+			,DEL_YN
+			,CRE_DT
+			,CRE_USER
+			,MOD_DT
+			,MOD_USER
+			, CATEGORY_ID)
+		VALUES ( 
+		      #{scriptId}					
+             ,#{simScriptId}					
+             ,#{similarityScriptCont}			
+             ,#{score}						
+             ,#{order}						
+             ,#{delYn}						
+             , CURRENT_TIMESTAMP						
+             ,#{creUser}				
+             , CURRENT_TIMESTAMP				
+             ,#{modUser}
+			 ,#{categoryId}) 
+	</insert>
+	
+	<!-- 유사스크립트 수정 -->
+	<update id="updateQASimScript" parameterType="kr.co.wisenut.textminer.autoqa.vo.AutoQaSimScriptVo">
+		UPDATE /* kr.co.wisenut.mapper.AutoQAMapper.updateQASimScript */
+			   WISETM_QA_SIMILARITY_SCRIPT
+		SET    MOD_DT = CURRENT_TIMESTAMP
+			 , MOD_USER = #{modUser}
+		<if test='similarityScriptCont != null and similarityScriptCont != ""'>, COMPLIANCE_ITEM_CD = #{complianceItemCd}</if>
+		<if test='delYn != null and delYn != ""'>, DEL_YN = #{delYn}</if>
+		WHERE  SCRIPT_ID = #{scriptId}
+		AND CATEGORY_ID = #{categoryId}) 
+	</update>
+	
+	<!-- 유사스크립트 삭제 -->
+	<delete id="deleteQASimScript" parameterType="kr.co.wisenut.textminer.autoqa.vo.AutoQaSimScriptVo">
+		DELETE /* kr.co.wisenut.mapper.AutoQAMapper.deleteQASimScript*/
+		FROM   WISETM_QA_SIMILARITY_SCRIPT
+		WHERE  SCRIPT_ID = #{scriptId}
+		AND SIMILARITY_SCRIPT_ID = #{simScriptId}) 
+	</delete>
+	
+	
+	
+	
+	
+	<!-- 테이블 -->
+	<sql id="selectTable">
+	  (SELECT TMP.*
+			 , CEIL( TMP.SEQ / 10 ) AS PAGE_ROW
+				FROM ( SELECT ROWNUM AS SEQ
+					,SCRIPT_ID
+					,SCRIPT_CONT
+					,COMPLIANCE_ITEM_CD
+					,SCORE
+					,QA_ORDER
+					,DEL_YN
+					,CRE_DT
+					,CRE_USER
+					,MOD_DT
+					,MOD_USER
+					,CATEGORY_ID
+			   FROM   WISETM_QA_SCRIPT)TMP
+	  ) TOTAL
+	</sql>
+	
+	<!-- 상담카테고리 Depth 구조 조회 -->
+	<select id="getQACategory" parameterType="hashmap" resultType="kr.co.wisenut.textminer.autoqa.vo.AutoQaCateInfoVo">
+		SELECT '0' AS "id"
+		     , 'WISENUT' AS "name"
+		     , 0 AS "depth"
+		     , '#' AS "parentId"
+		  FROM DUAL
+		UNION
+		SELECT CATEGORY_ID AS "id"
+		     , CATEGORY_NAME AS "name"
+		     , DEPTH AS "depth"
+		     , DECODE(DEPTH, 1, '0', PARENTS_CATEGORY_ID) AS "parentId"
+		  FROM WISETM_QA_CATEGORY
+		 ORDER BY "depth", "id"
+
+	</select>
+
+</mapper>

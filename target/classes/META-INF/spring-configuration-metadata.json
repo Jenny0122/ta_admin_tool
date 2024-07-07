@@ -1,0 +1,188 @@
+{
+  "groups": [
+    {
+      "name": "classifier",
+      "type": "kr.co.wisenut.config.ClassifierProperties",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "spring.datasource.hikari",
+      "type": "javax.sql.DataSource",
+      "sourceType": "kr.co.wisenut.config.DataSourceConfig",
+      "sourceMethod": "dataSource()"
+    },
+    {
+      "name": "storage",
+      "type": "kr.co.wisenut.config.TMStorageProperties",
+      "sourceType": "kr.co.wisenut.config.TMStorageProperties"
+    },
+    {
+      "name": "tminterface",
+      "type": "kr.co.wisenut.config.TMProperties",
+      "sourceType": "kr.co.wisenut.config.TMProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "classifier.auto-analyzer-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.auto-analyzer-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.auto-listener-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.auto-listener-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.auto-qa-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.auto-qa-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.auto-trainer-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.auto-trainer-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.emotion-analyzer-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.emotion-analyzer-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.emotion-listener-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.emotion-listener-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.emotion-preprocess-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.emotion-preprocess-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.emotion-trainer-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.emotion-trainer-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.keyword-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.keyword-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.related-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.related-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.string-matcher-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.string-matcher-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.summary-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.summary-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.summary-preprocess-host",
+      "type": "java.lang.String",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "classifier.summary-preprocess-port",
+      "type": "java.lang.Integer",
+      "sourceType": "kr.co.wisenut.config.ClassifierProperties"
+    },
+    {
+      "name": "storage.download-dir",
+      "type": "java.lang.String",
+      "description": "Folder downloadDir for serving files",
+      "sourceType": "kr.co.wisenut.config.TMStorageProperties"
+    },
+    {
+      "name": "storage.expiration-time-hour",
+      "type": "java.lang.Long",
+      "description": "Expiration time (hour) for up&download Files. 스테이징 파일 보존 기한. 기본값 = 24시간",
+      "sourceType": "kr.co.wisenut.config.TMStorageProperties"
+    },
+    {
+      "name": "storage.upload-dir",
+      "type": "java.lang.String",
+      "description": "Folder uploadDir for storing files",
+      "sourceType": "kr.co.wisenut.config.TMStorageProperties"
+    },
+    {
+      "name": "tminterface.core-host",
+      "type": "java.lang.String",
+      "description": "Text-miner v3 Server host(ip)",
+      "sourceType": "kr.co.wisenut.config.TMProperties"
+    },
+    {
+      "name": "tminterface.core-port",
+      "type": "java.lang.Integer",
+      "description": "Text-miner v3 Server port (default=7777)",
+      "sourceType": "kr.co.wisenut.config.TMProperties"
+    }
+  ],
+  "hints": []
+}

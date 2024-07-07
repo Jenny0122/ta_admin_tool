@@ -88,7 +88,7 @@
 					<div class="cont1 clearfix1 mt20" style="border:1px solid #ddd;padding:10px 8px;">
 						<label for="show" class="ml10">카테고리 : </label>
 						<tr>
-							<td> 인바운드 &gt; 상담기본 &gt; 기본상담</td>
+							<td> <span id="category_depth"></span></td>
 						</tr>
 						<br>
 						<label for="show" class="ml10" style="position:relative;top:7px;">사용여부 : </label>
@@ -138,7 +138,7 @@
 							<td><input type="text" name="score" style="width:95%" value=""  readonly="readonly");></td>
 							<td><input type="text" name="scriptCont" style="width:95%" value=""  readonly="readonly");></td>
 							<td>
-								<button id="saveBtn" type="button" class="btn btn_blue w98" onclick="saveSimScipt()"><i class="far fa-save"></i>유사문장</button>
+								<button id="saveSimScriptBtn" type="button" class="btn btn_blue w98" onclick="showPopup('sim_script')"><i class="far fa-save"></i>유사문장</button>
 							</td>
 							<td>
 								<button id="saveBtn" type="button" class="btn btn_green w98" onclick="saveKeyword()"><i class="far fa-save"></i>키워드</button>
@@ -306,6 +306,27 @@
 			</div>
 		</div>
 		<!--스크립트 다운로드 팝업 end-->
+
+		<!--유사문장 추가 팝업-->
+		<div id="sim_script" class="marks_overlay pop_sum_plus" style="display:none;">
+			<div class="bg"></div>
+			<div class="pop_box xsmall">
+				<!--스크립트 추가 top-->
+				<div class="top clearfix">
+					<h3 class="fL">유사문장</h3>
+					<a href="#" class="close_create close fR" onclick="hidePopup('sim_script');"><i class="fas fa-times"></i></a>
+				</div>
+
+				<!-- 유사문장 popup 내용-->
+				<div class="pop_container large">
+					<div class="cont_box m0"></div>
+					</div>
+
+				<!--스크립트 추가 top end-->
+			</div>
+		</div>
+		<!--유사문장 추가 팝업 end-->
+
 		<!--
         <script scr="/js/jstree.js"></script>
         -->

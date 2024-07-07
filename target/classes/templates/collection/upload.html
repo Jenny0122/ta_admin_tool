@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+
+<head>
+    <title>컬렉션 문서 업로드</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>문서 업로드</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i></li>
+                    <li><span>&gt;</span>컬렉션</li>
+                    <li><span>&gt;</span>컬렉션 정보</li>
+                    <li><span>&gt;</span><strong>문서 업로드</strong></li>
+                </ul>
+            </div>
+            <div class="cont_box mt0">
+                <h3 th:text="${collection.collectionName}" th:title="|${collection.creDt}&#10;${collection.collectionDesc}|"></h3>
+                <div class="container">
+                    <div class="cont1 clearfix">
+                        <div class="fL mt20" style="display: none">
+                            <label class="ml15" for="divide">문서 정보</label>
+                            <select class="w150 ml10" id="divide">
+                                <option selected disabled> 컬렉션 선택</option>
+                                <option> 기본 > 설정해주세요</option>
+                                <option> 설정</option>
+                            </select>
+                            <label class="ml15" for="show">show</label>
+                            <input type="number" class="w65 ml10" id="show" value="10" min="10" max="100" step="10">
+                            <label for="show" class="ml10">Entities</label>
+                        </div>
+                        <div class="fR file_input">
+                            <span id="upload-progress"></span>
+                            <form name="file-upload-form" th:onsubmit="|return uploadFile(${collection.collectionId}, this);|"
+                                  th:data-max-file-size="${maxFileSize}">
+                                <input type="text" class="w300" readonly="readonly" id="file_route"
+                                       placeholder="선택된 파일 없음">
+
+                                <label class="w98"><i class="fas fa-file mr5"></i>파일 선택
+                                    <input type="file" class="btn btn_sky " name="file" required="required"
+                                           accept=".json, .csv"
+                                           onchange="javascript:document.getElementById('file_route').value=this.value">
+                                </label>
+
+                                <label class="w98"><i class="fas fa-file mr5"></i>파일 분석
+                                    <input type="submit" class="btn btn_sky">
+                                </label>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!--업로드 대기파일 table-->
+                    <table id="table-staged" class="basic_tbl_type mt20">
+                        <colgroup>
+                            <col width="3%;">
+                            <col width="30%;">
+                            <col width="8%;">
+                            <col width="8%;">
+                            <col width="*;">
+                            <col width="4%;">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                        <tr>
+                            <th>No.</th>
+                            <th>파일명</th>
+                            <th title="docid 필드 기준으로 추정한 문서 수로, 실제 문서 수와 일치하지 않을 수 있습니다.">문서수</th>
+                            <th>크기</th>
+                            <th>상태</th>
+                            <th>삭제</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        <tr th:if="${#lists.isEmpty(files)}">
+                            <td colspan="6">업로드할 파일을 추가해주세요</td>
+                        </tr>
+                        <!--스테이징 파일 리스트 출력-->
+                        <tr th:each="file,iterStat: ${files}" class="tbody-staged" th:id="${file.filename}">
+                            <td th:text="${iterStat.count}"></td>
+                            <td class="fileName" th:text="${file.filename}" th:title="${file.getAbsolutePath()}"></td>
+                            <td class="count-document" th:text="${file.estimateCountDoc}"
+                                th:title="${file.estimateCountDoc==0}? '해당 파일은 docid 필드가 존재하지 않습니다.'"></td>
+                            <td class="fileSize" th:text="${file.filesize}">0</td>
+                            <td class="uploadState" th:text="${!file.isImportable()} ? ${file.message} : '-'">-</td>
+                            <td><a><i class="fas fa-trash"
+                                      th:data-file-name="${file.filename}"
+                                      th:onclick="|deleteFile(${collection.collectionId}, this.dataset.fileName)|"></i></a></td>
+                        </tr>
+                        <!--/* 스테이징 파일 리스트 출력 end */-->
+
+                        <!--임포트히스토리 리스트 출력-->
+                        <tr th:each="history,iterStat: ${importHistory}" class="disable" th:id="${history.fileName}">
+                            <td th:text="${iterStat.size - iterStat.index}"></td>
+                            <td class="fileName" th:text="${history.fileName}" th:title="${history.importDt}"></td>
+                            <td class="count-document" th:text="${history.validCount}"></td>
+                            <td class="fileSize" th:text="${history.fileSize}">0</td>
+                            <td class="uploadState">
+                                <span th:text="|${history.getLabel()}(${history.validCount} / ${history.totalCount})|"/>
+                                <a><i th:if='${history.progress != "SUCCESS"}'
+                                      class="fa-exclamation-circle fas ml5" style="color: red"
+                                      th:onclick="|historyPopup(${history.importId}, this.dataset)|" title="업로드 오류 로그 보기"
+                                      th:data-resourceId="${history.resourceId}"
+                                      th:data-fileName="${history.fileName}"></i></a>
+                            </td>
+                            <td></td><!--히스토리는 삭제 불가-->
+                        </tr>
+                        <!--/* 임포트 히스토리 리스트 출력 end */-->
+
+
+                        </tbody>
+                    </table>
+                    <!--업로드 대기파일 table end-->
+
+                    <!--컬렉션 문서 미리보기-->
+                    <th:block th:if="${headerFile}">
+                        <div class="fL mb20 mt40">
+                            <label class="ml15 " for="divide" th:title="|${startDocument.size()} 개 필드|">문서 미리보기</label>
+                        </div>
+
+                        <table id="table-document" class="basic_tbl_type mb40">
+                            <colgroup>
+                                <col width="4%;">
+                                <col width="10%;">
+                                <col width="*">
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" title="전체 선택/해제" onchange="document.querySelectorAll('input[name=field]:enabled').forEach(value => value.checked=this.checked);">
+                                </th>
+                                <th>필드명</th>
+                                <th>내용</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            <!--문서 미리보기 출력-->
+                            <tr th:if="${#lists.isEmpty(startDocument)}">
+                                <td colspan="3" th:utext="${#lists.isEmpty(files)}? '업로드할 파일을 추가해주세요' : '문서를 가져오는데 실패했습니다. 목록의 <a href=\'#\'>첫번째 파일</a>을 확인해주세요'"></td>
+                            </tr>
+                            <tr th:each="entry,iterStat: ${startDocument}">
+                                <!--<td th:text="${iterStat.count}">val</td>-->
+                                <td><!--<input type="checkbox" th:value="${entry.getKey()}" name="field"
+                                           th:checked="${not #strings.isEmpty(entry.getValue()) and not #strings.equals(entry.getValue(), 'null')}? 'checked'">-->
+                                    <input type="checkbox" th:value="${entry.getKey()}" name="field"
+                                           th:disabled="${!#arrays.isEmpty(fieldInfo)}? 'disabled'"
+                                           th:checked="${#arrays.contains(fieldInfo, entry.getKey())}? 'checked'">
+                                </td>
+                                <td th:text="${entry.getKey()}">key</td>
+                                <!--<td th:text="${entry.getValue()}">val</td>-->
+                                <td style="text-align: left" th:text="${#strings.abbreviate(entry.getValue(), 100)}"
+                                    th:title="${entry.getValue()!=null} ? (${#strings.length(entry.getValue()) > 100} ? ${entry.getValue()}) : ''"></td>
+                            </tr>
+                            <!--문서 미리보기 출력 end -->
+
+                            </tbody>
+                        </table>
+                        <!--컬렉션 업로드 오류처리 영역-->
+                        <div class="cont_box m0">
+                            <div class="cont1 clearfix">
+                                <div class="fL">
+                                    <label for="err-boxline" class="ml15" style="font-size: inherit;">오류 문서 처리
+                                        <i class="fa-question-circle fas ml10"
+                                           title="오류 문서 처리는 문서 업로드 시&#10;에 오류가 발생할 경우 처리 방법&#10;에 대한 선택사항 입니다."></i></label>
+                                    <div style="display:inline; text:center; width: 85%" id="err-boxline" class="p5">
+									<span class="ml400">
+										<input type="radio" class="" id="err_skip" value="SKIP" name="errorHandle" style="font-size: inherit;">
+										<label class="ml10" for="err_skip" title="업로드 할 수 없는 문서는 건너뛰고 진행합니다.">오류 건너뛰기</label>
+										<input type="radio" id="file_uploadStop" value="STOP" name="errorHandle" checked="checked" class="ml100" style=" font-size: inherit; ">
+                                        <label class="ml10" for="file_uploadStop" title="오류가 발생할 경우 해당 파일은 업로드를 중지 합니다.">파일 업로드 중지</label>
+									</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="clearfix cont1 mt10">
+                            <div class="fR">
+                                <button type="button" id="button-upload" class="btn btn_mint w100"
+                                        th:onclick="|requestImport(${collection.collectionId}, document.querySelector('input[type=radio][name=errorHandle]:checked').value);|">
+                                    <i class="fas fa-file-upload mr5"></i>업로드
+                                </button>
+                            </div>
+                        </div>
+                        <!--컬렉션 업로드 오류처리 영역 end-->
+
+                    </th:block>
+                </div>
+                <!-- container end-->
+            </div>
+            <!-- cont_box end -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+    <!-- cont_wrap End-->
+
+    <div id="result_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box medium">
+            <!-- 결과 화면 팝업 top-->
+            <div class="top clearfix">
+                <h3 class="fL">문서 업로드 오류</h3>
+                <a href="#" class="close_result close fR">
+                    <i class="fas fa-times" onclick="document.getElementById('result_pop').style.display='none'"></i>
+                </a>
+            </div>
+            <!-- 결과 화면  팝업 top end-->
+
+            <!-- 결과 화면  팝업 내용 top-->
+            <div class="pop_container" style="height:460px">
+                <div class="cont_box m0">
+                    <div class="cont1 clearfix">
+                        <div class="mb20 fL">
+                            <label id="result-title" class="ml10 " style="width:auto; font-size: 20px; vertical-align: bottom;"></label>
+                        </div>
+                        <div class="mb20 fR">
+                            <button id="result-download" type="button" class="btn btn_sky w98 ml15"
+                                    title="문서 업로드 결과 로그 파일(txt) 다운로드"><i class="fas fa-file-download mr5"></i> 다운로드
+                            </button>
+                        </div>
+                        <div class="">
+                            <table class="basic_tbl_type result-data" id="result-data">
+                                <colgroup>
+                                    <col width="16%;">
+                                    <col width="*;">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Log.</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+
+                            <!--<div class="page_btn_num clear_both" id="resultPagination">
+                                &lt;!&ndash;<a class="right" href="#">&lt;&lt;</a>&ndash;&gt;
+                                &lt;!&ndash;<a class="right" href="#">&lt;</a>&ndash;&gt;
+                                <a class="num click " href="#">1</a>
+                                &lt;!&ndash;<a class="right" href="#">&gt;</a>&ndash;&gt;
+                                &lt;!&ndash;<a class="right" href="#">&gt;&gt;</a>&ndash;&gt;
+                            </div>-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 결과 화면  내용 end-->
+            <!-- 결과 화면  팝업 footer-->
+            <div class="pop_bottom align_c">
+
+            </div>
+            <!-- 결과 화면  팝업 footer end-->
+        </div>
+    </div>
+
+    <script type="text/javascript" th:src ="@{/mng/uploadPollingStatus.js}"></script>
+    <script type="text/javascript" th:src="@{/mng/collection/upload.js}"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            // page loaded, check if collection-upload is in progress
+            // checkIfInProgress();
+
+            // fileSize byte 단위 표기
+            [...document.querySelectorAll("td.fileSize")].forEach((tdElement, idx) => {
+                const size = tdElement.innerText;
+                try {
+                    tdElement.title = `${size} byte`;
+                    tdElement.innerText = get_file_size(size);
+                } catch (e) {
+                    console.error(`Failed to convert file size '${size}' expression. ${e}`);
+                }
+            });
+
+            checkByTableRowClick("#table-document tr");
+        });
+
+    </script>
+
+</section>
+</body>
+
+</html>

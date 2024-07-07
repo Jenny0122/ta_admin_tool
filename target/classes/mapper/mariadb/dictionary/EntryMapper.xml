@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.dictionary.mapper.EntryMapper">
+
+	<!-- 1. Entry -->
+	<!-- 사전 내의 가장 최근에 등록된 엔트리의 ID 가져오기 -->
+	<select id="getMaxEntryId" parameterType="kr.co.wisenut.textminer.dictionary.vo.EntryVo" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.getMaxEntryId */
+			   COALESCE(MAX(ENTRY_ID), 0) + 1 AS "maxId"
+		FROM   WISETM_ENTRIES
+		WHERE  DICTIONARY_ID = #{dictionaryId}
+	</select>
+	
+	<!-- 엔트리 전체건수 조회 -->
+	<select id="getEntryTotalCount" parameterType="hashmap" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.getEntryTotalCount */
+			   COUNT(*) AS cnt
+		FROM   <include refid="selectTable"></include>
+		WHERE  1 = 1
+	</select>
+
+	<!-- 엔트리 리스트 조회 -->
+	<select id="getEntryList" parameterType="hashmap" resultType="kr.co.wisenut.textminer.dictionary.vo.EntryVo">
+		SELECT /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.getEntryList */
+			   ENTRY_ID AS entryId
+			 , DICTIONARY_ID AS dictionaryId
+			 , ENTRY_CONTENT AS entryContent
+			 , SYNONYMS AS synonyms
+		FROM   <include refid="selectTable"></include>
+		WHERE  1 = 1
+		<if test='pageSize > 1'>
+			AND  PAGE_ROW = #{pageRow}
+		</if>
+	</select>
+
+	<!-- 사전적용 API에 연동할 데이터 가져오기 -->
+	<select id="getEntryForDictionary" parameterType="hashmap" resultType="kr.co.wisenut.textminer.dictionary.vo.EntryVo">
+		SELECT /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.getEntryForDictionary */
+			   DISTINCT
+			   WTE.ENTRY_CONTENT AS entryContent
+			 , COALESCE(WTS.SYNONYMS, '') AS synonyms
+		FROM   WISETM_DICTIONARIES WTD
+		INNER JOIN WISETM_ENTRIES WTE
+				ON WTD.DICTIONARY_ID  = WTE.DICTIONARY_ID 
+		LEFT OUTER JOIN ( SELECT ENTRY_ID 
+								  , DICTIONARY_ID
+								  , GROUP_CONCAT(SYNONYM_CONTENT) AS SYNONYMS
+							 FROM   WISETM_SYNONYM
+							 GROUP BY ENTRY_ID, DICTIONARY_ID ) WTS
+						ON WTE.ENTRY_ID = WTS.ENTRY_ID
+					   AND WTE.DICTIONARY_ID = WTS.DICTIONARY_ID
+		WHERE  WTD.DICTIONARY_TYPE = #{dictionaryType}
+		  AND (WTD.DICTIONARY_ID = #{dictionaryId}
+		/* 공통사전 기능 구현해봤으나 사용안함
+		<if test='shared == "Y"'>
+		   OR  WTD.DICTIONARY_SHARED_YN = 'Y'
+		</if>
+		*/
+			  )
+	</select>
+	
+	<!-- 엔트리 중복검사(사전 내부에 해당 엔트리가 등록되어 있는지 검사) -->
+	<select id="checkDuplicatedEntry" parameterType="kr.co.wisenut.textminer.dictionary.vo.EntryVo" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.checkDuplicatedEntry */
+			   COUNT(*) AS cnt
+		FROM   WISETM_ENTRIES
+		WHERE  DICTIONARY_ID = #{dictionaryId}
+		  AND  ENTRY_CONTENT = #{entryContent}
+	</select>
+
+	<!-- 엔트리 중복검사(다른 사전에 해당 엔트리가 등록되어 있는지 검사) // 사용안함 -->
+	<select id="checkDuplicatedEntryInOthers" parameterType="kr.co.wisenut.textminer.dictionary.vo.EntryVo" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.checkDuplicatedEntryInOthers */
+			   COUNT(*) AS cnt
+		FROM   WISETM_ENTRIES WTE
+		INNER JOIN ( SELECT DICTIONARY_ID 
+					 FROM   WISETM_DICTIONARIES 
+					 WHERE  DICTIONARY_TYPE = #{dictionaryType}
+					   AND  DICTIONARY_SHARED_YN = #{dictionarySharedYn}
+					   		/* Y : 일반사전 엔트리 등록 시, 공통사전에 등록하려는 엔트리가 있는지 확인 */
+					   		/* N : 공통사전 엔트리 등록 시, 일반사전에 등록하려는 엔트리가 있는지 확인 */
+				   ) WTD
+				ON WTE.DICTIONARY_ID = WTD.DICTIONARY_ID
+		WHERE  WTE.ENTRY_CONTENT = #{entryContent}
+	</select>
+
+	<!-- 엔트리 등록 -->
+	<insert id="insertEntry" parameterType="kr.co.wisenut.textminer.dictionary.vo.EntryVo">
+		<selectKey resultType="int" keyProperty="entryId" order="BEFORE">
+			SELECT COALESCE(MAX(ENTRY_ID),0) + 1 
+			FROM   WISETM_ENTRIES
+			WHERE  DICTIONARY_ID = #{dictionaryId}
+		</selectKey>
+		
+		INSERT /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.insertEntry */
+		INTO   WISETM_ENTRIES (ENTRY_ID, DICTIONARY_ID, ENTRY_CONTENT)
+		VALUES ( #{entryId}
+			   , #{dictionaryId}
+			   , #{entryContent}
+			   ) 
+	</insert>
+	
+	<!-- 엔트리 삭제 -->
+	<delete id="deleteEntry" parameterType="kr.co.wisenut.textminer.dictionary.vo.EntryVo">
+		DELETE /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.deleteEntry */
+		FROM   WISETM_ENTRIES
+		WHERE  1 = 1
+		<if test='entryId != null and entryId != ""'> 
+		  AND  ENTRY_ID = #{entryId}
+		</if>
+		  AND  DICTIONARY_ID = #{dictionaryId}
+	</delete>
+
+	<!-- 테이블 (엔트리) -->
+	<sql id="selectTable">
+	  ( SELECT TMP.*
+			 , CEIL( TMP.SEQ / #{pageSize} ) AS PAGE_ROW
+		FROM ( SELECT (@ROWNUM := @ROWNUM + 1) AS SEQ
+					, WTE.ENTRY_ID
+					, WTE.DICTIONARY_ID
+					, WTE.ENTRY_CONTENT
+					, COALESCE(WTS.SYNONYMS, '') AS SYNONYMS
+			   FROM   WISETM_ENTRIES WTE
+			   LEFT OUTER JOIN ( SELECT ENTRY_ID 
+									  , DICTIONARY_ID
+									  , GROUP_CONCAT(SYNONYM_CONTENT SEPARATOR ';') AS SYNONYMS
+								 FROM   WISETM_SYNONYM
+								 GROUP BY ENTRY_ID, DICTIONARY_ID ) WTS
+							ON WTE.ENTRY_ID = WTS.ENTRY_ID
+						   AND WTE.DICTIONARY_ID = WTS.DICTIONARY_ID
+				  ,  (SELECT @ROWNUM := 0) TMP
+			   WHERE  DICTIONARY_ID = #{dictionaryId}
+		<if test='searchPattern != null and searchPattern != ""'>
+				 AND (WTE.ENTRY_CONTENT LIKE CONCAT('%', #{searchPattern}, '%')
+				 OR   WTS.SYNONYMS LIKE CONCAT('%', #{searchPattern}, '%'))
+		</if> 
+			 ) TMP
+	  ) TOTAL
+	</sql>
+	
+	<!-- 2. Synonym -->
+	<!-- 동의어 중복검사 -->
+	<select id="checkDuplicatedSynonym" parameterType="kr.co.wisenut.textminer.dictionary.vo.SynonymVo" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper */
+			   COUNT(*) AS cnt
+		FROM   WISETM_SYNONYM
+		WHERE  ENTRY_ID = #{entryId}
+		  AND  DICTIONARY_ID = #{dictionaryId}
+		  AND  SYNONYM_CONTENT = #{synonymContent}
+	</select>
+	
+	<!-- 동의어 등록 -->
+	<insert id="insertSynonym" parameterType="kr.co.wisenut.textminer.dictionary.vo.SynonymVo">
+		<selectKey resultType="int" keyProperty="synonymId" order="BEFORE">
+			SELECT COALESCE(MAX(SYNONYM_ID),0) + 1 
+			FROM   WISETM_SYNONYM
+			WHERE  ENTRY_ID = #{entryId}
+			  AND  DICTIONARY_ID = #{dictionaryId}
+		</selectKey>
+	
+		INSERT /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.insertSynonym */
+		INTO   WISETM_SYNONYM
+		VALUES ( #{synonymId}
+			   , #{entryId}
+			   , #{dictionaryId}
+			   , #{synonymContent} 
+			   )
+	</insert>
+	
+	<!-- 동의어 삭제 -->
+	<delete id="deleteSynonym" parameterType="kr.co.wisenut.textminer.dictionary.vo.SynonymVo">
+		DELETE /* kr.co.wisenut.textminer.dictionary.mapper.EntryMapper.deleteSynonym */
+		FROM   WISETM_SYNONYM
+		WHERE  1 = 1
+		<if test='entryId != null and entryId != ""'> 
+		  AND  ENTRY_ID = #{entryId}
+		</if>
+		  AND  DICTIONARY_ID = #{dictionaryId}
+	</delete>
+</mapper>

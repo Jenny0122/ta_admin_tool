@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Endpoint list</title>
+    <style type="text/css">
+        .tbl_list {
+            border-top: 2px solid #73abd1;
+        }
+
+        .tbl_list table {
+            table-layout: fixed;
+            word-break: break-all;
+            border-collapse: collapse;
+            border-spacing: 0px;
+        }
+
+        .tbl_list table th span {
+            cursor: n-resize;
+        }
+        .tbl_list table thead td, th {
+            background-color: #e8f3f9;
+            border-bottom: 1px #d7d7d7 solid;
+            border-right: 1px #d7d7d7 solid;
+            height: 30px;
+            color: #2a2a2a;
+            font-family: dotum, Verdana, arial, sans-serif;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            border-collapse: collapse;
+            border-spacing: 0px;
+        }
+
+        .tbl_list table thead td:last-child {
+            border-right: 0px;
+        }
+
+        .tbl_list table tbody td {
+            padding-left: 10px;
+            padding-right: 10px;
+            border-bottom: 1px #d7d7d7 solid;
+            border-right: 1px #d7d7d7 solid;
+            height: 30px;
+            color: #2a2a2a;
+            font-family: dotum, Verdana, arial, sans-serif;
+            font-size: 12px;
+            font-weight: unset;
+            border-collapse: collapse;
+            border-spacing: 0px;
+        }
+
+        .tbl_list table tbody td:last-child {
+            border-right: 0px;
+        }
+
+        #myInput {
+            background-image: url(@{'/css/searchicon.png'}); /* Add a search icon to input */
+            background-position: 10px 12px; /* Position the search icon */
+            background-repeat: no-repeat; /* Do not repeat the icon image */
+            width: 100%; /* Full-width */
+            font-size: 16px; /* Increase font-size */
+            padding: 12px 20px 12px 40px; /* Add some padding */
+            border: 1px solid #ddd; /* Add a grey border */
+            margin-bottom: 12px; /* Add some space below the input */
+        }
+
+    </style>
+</head>
+<body>
+
+<h1>Request Mapping Table</h1>
+<div class="tbl_list">
+    <form><input type="text" id="myInput" onkeyup="filterTable()" placeholder="Search for path.."></form>
+
+    <table id="apiTable">
+        <thead>
+        <tr>
+            <!--<th>Desc</th>-->
+            <!--<th>Operation</th>-->
+            <th><span onclick="sortTable(0)">↕</span> Path</th>
+            <th><span onclick="sortTable(1)">↕</span> HttpMethod</th>
+            <th><span onclick="sortTable(2)">↕</span> Class</th>
+            <th><span onclick="sortTable(3)">↕</span> MethodName</th>
+            <th><span onclick="sortTable(4)">↕</span> MethodParam</th>
+            <!--<th>Param</th>-->
+            <!--<th>Return</th>-->
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="endPoint,iterStat : ${endPoints}">
+            <!--<td>${endPoint.desc}</td>-->
+            <!--<td>${endPoint.operation}</td>-->
+            <td th:text="${endPoint.path}">.</td>
+            <td th:text="${endPoint.httpMethod}">.</td>
+            <td th:text="${endPoint.cls}">./td>
+            <td th:text="${endPoint.methodName}">.</td>
+            <td th:text="${endPoint.methodParam}">.</td>
+            <!--<td>${endPoint.param}</td>-->
+            <!--<td>${endPoint.rtn}</td>-->
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
+
+<script>
+    function sortTable(n) {
+        let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.getElementById("apiTable");
+        switching = true;
+        // Set the sorting direction to ascending:
+        dir = "asc";
+        /* Make a loop that will continue until
+        no switching has been done: */
+        while (switching) {
+            // Start by saying: no switching is done:
+            switching = false;
+            rows = table.rows;
+            /* Loop through all table rows (except the
+            first, which contains table headers): */
+            for (i = 1; i < (rows.length - 1); i++) {
+                // Start by saying there should be no switching:
+                shouldSwitch = false;
+                /* Get the two elements you want to compare,
+                one from current row and one from the next: */
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                /* Check if the two rows should switch place,
+                based on the direction, asc or desc: */
+                if (dir == "asc") {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        // If so, mark as a switch and break the loop:
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        // If so, mark as a switch and break the loop:
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                /* If a switch has been marked, make the switch
+                and mark that a switch has been done: */
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                // Each time a switch is done, increase this count by 1:
+                switchcount ++;
+            } else {
+                /* If no switching has been done AND the direction is "asc",
+                set the direction to "desc" and run the while loop again. */
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
+
+    function filterTable() {
+        // Declare variables
+        let input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("myInput");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("apiTable");
+        tr = table.getElementsByTagName("tr");
+
+        // Loop through all table rows, and hide those who don't match the search query
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+                txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>

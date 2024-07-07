@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>TM Server 연결 실패</title>
+</head>
+<body>
+<script type="text/javascript" th:inline="javascript">
+    /*<![CDATA[*/
+    console.error(document.referrer);
+    console.error(/*[[ ${errorMessage} ]]*/);
+    console.error("referer: ", /*[[ ${referer} ]]*/);
+
+    let referer =  /*[[ ${referer} ]]*/;
+    if (!referer) {
+        referer = document.referrer;
+    }
+
+    if (confirm("TM Server 연결을 확인해주세요.\n" +
+        "문제가 계속 될 경우 관리자에게 문의 바랍니다.")) {
+        location.href = "/user/mypage";
+    } else {
+        location.href = referer;
+    }
+    /*]]>*/
+</script>
+</body>
+</html>

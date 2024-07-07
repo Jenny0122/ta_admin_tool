@@ -1,0 +1,967 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.batch.mapper.BatchMapper">
+	
+	<!-- STT 재수집 TA 재분석 대상 CallId 조회 -->
+    <select id="getModuleFailedCallInfo" resultType="HashMap">
+		SELECT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.getModuleFailedCallInfo */
+			   DISTINCT TB_DIV AS "tbDiv" 
+			   		  , CALL_ID AS "callId"
+			   		  , RESULT_CD AS "resultCd"
+		FROM ( SELECT '1' AS TB_DIV
+					, CALL_ID
+					, RESULT_CD
+			   FROM   TB_WTM_IS_BS_NOTMATCH
+			   WHERE  END_DT IS NULL
+				 AND  RESULT_CD != '400100'
+				 AND  START_DT >= (CURRENT_TIMESTAMP - 1)
+			   UNION ALL  
+			   SELECT DISTINCT '2' AS TB_DIV
+					, TWIS.CALL_ID
+					, '' AS RESULT_CD
+			   FROM   TB_WTM_IS_SESS TWIS											/* 세션 테이블 */
+			   LEFT OUTER JOIN (SELECT CALL_ID 
+								FROM   TB_WTM_IS_BS_NOTMATCH
+								WHERE  START_DT >= (CURRENT_TIMESTAMP - 1)) TIBN
+							ON  TIBN.CALL_ID = TWIS.CALL_ID							/* 분석실패 */
+			   LEFT OUTER JOIN (SELECT CALL_ID 
+								FROM   TB_WTM_IS_BS_CLASS) TWIBC 
+							ON  TWIBC.CALL_ID = TWIS.CALL_ID						/* 유형분석 */
+			   LEFT OUTER JOIN (SELECT CALL_ID 
+								FROM   TB_WTM_IS_BS_KEYWORD) TWIBK 
+							ON  TWIBK.CALL_ID = TWIS.CALL_ID						/* 키워드 추출 */
+			   LEFT OUTER JOIN (SELECT CALL_ID 
+								FROM   TB_WTM_IS_BS_RELWORD) TWIBR 
+							ON  TWIBR.CALL_ID = TWIS.CALL_ID						/* 연관어 추출 */
+			   LEFT OUTER JOIN (SELECT CALL_ID 
+								FROM   TB_WTM_IS_BS_SENT) TWIBS 
+							ON  TWIBS.CALL_ID = TWIS.CALL_ID						/* 감성분석 */
+			   LEFT OUTER JOIN (SELECT CALL_ID 
+								FROM   TB_WTM_IS_BS_SUMM) TWIBS2
+							ON  TWIBS2.CALL_ID = TWIS.CALL_ID						/* 문서요약 */
+			   WHERE  TWIS.CALL_START_DT >= (CURRENT_TIMESTAMP - 1)
+				 AND  TWIS.ANA_STATUS != '400100'
+				 AND  TIBN.CALL_ID IS NULL
+				 AND  TWIBC.CALL_ID IS NULL
+				 AND  TWIBK.CALL_ID IS NULL
+				 AND  TWIBR.CALL_ID IS NULL
+				 AND  TWIBS.CALL_ID IS NULL
+				 AND  TWIBS2.CALL_ID IS NULL ) T
+    </select>
+    
+    <!-- 키워드 집계 당일데이터 삭제 -->
+	<delete id="keywordDelete" parameterType="hashMap">
+		DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.keywordDelete */
+		FROM   TB_WTM_STAT_KEYWORD
+		WHERE  YEAR = #{year}
+		  AND  MONTH = #{month}
+		  AND  DAY = #{day}
+	</delete>
+    
+    <!-- 키워드 집계 (분) -->
+    <!-- todo :: CLS라벨 대중소 분류여부 확인필요 -->
+    <insert id="keywordTotal" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.keywordTotal */
+    	INTO   TB_WTM_STAT_KEYWORD (YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, CLS_LABEL, KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV)
+		SELECT #{year}
+			 , #{month}
+			 , #{week}
+			 , #{day}
+			 , #{hour}
+			 , #{minute}
+			 , c.CLS_LABEL
+			 , k.KEYWORD
+			 , s.INOUT_SC_CD
+			 , s.CHANNEL_SC_CD
+			 , SUM(k.COUNT)
+			 , #{div}
+		FROM   TB_WTM_IS_SESS s
+		LEFT OUTER JOIN TB_WTM_IS_BS_CLASS c 
+					 ON c.CALL_ID = s.CALL_ID 
+		LEFT OUTER JOIN TB_WTM_IS_BS_KEYWORD k 
+			    	 ON k.CALL_ID = s.CALL_ID
+		WHERE  1 = 1
+		  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{startTime}
+		  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{endTime}
+		  AND ((s.INOUT_SC_CD = 'I' AND c.CLS_FLAG = '1')
+		    OR (s.INOUT_SC_CD = 'O'))
+		  AND  k.COUNT > 0  
+		  AND  s.ANA_STATUS IN ('400300', '400400')
+		GROUP BY c.CLS_LABEL, k.KEYWORD, s.INOUT_SC_CD, s.CHANNEL_SC_CD
+    </insert>
+    
+    <!-- 키워드 집계 업데이트 (분) -->
+    <!-- CLS라벨 대중소 분류여부 확인필요 -->
+    <update id="keywordTotalUpMin" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.keywordTotalUpMin */
+    	INTO   TB_WTM_STAT_KEYWORD (YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, CLS_LABEL, KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV)
+		<foreach collection="minList" item="time" index="index" separator="UNION ALL">
+			SELECT #{year} AS "YEAR"
+				 , #{month} AS "MONTH"
+				 , #{week} AS "WEEK"
+				 , #{day} AS "DAY"
+				 , #{time.hour} AS "HOUR"
+				 , #{time.minute} AS "MINUTE"
+				 , c.CLS_LABEL
+				 , k.KEYWORD
+				 , s.INOUT_SC_CD
+				 , s.CHANNEL_SC_CD
+				 , SUM(k.COUNT) AS "COUNT"
+				 , #{div} AS "DIV"
+			FROM   TB_WTM_IS_SESS s
+			LEFT OUTER JOIN TB_WTM_IS_BS_CLASS c 
+						 ON c.CALL_ID = s.CALL_ID 
+			LEFT OUTER JOIN TB_WTM_IS_BS_KEYWORD k 
+				    	 ON k.CALL_ID = s.CALL_ID
+			WHERE  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{time.startTime}
+			  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{time.endTime}
+			  AND ((s.INOUT_SC_CD = 'I' AND c.CLS_FLAG = '1')
+			    OR (s.INOUT_SC_CD = 'O'))
+		 	  AND  k.COUNT > 0
+		 	  AND  s.ANA_STATUS IN ('400300', '400400')  
+			GROUP BY c.CLS_LABEL, k.KEYWORD, s.INOUT_SC_CD, s.CHANNEL_SC_CD
+		</foreach>
+    </update>
+    
+    <!-- 키워드 집계 (시/일/주/월/연) -->
+    <!-- 정리필요... -->
+    <insert id="keywordTotalInTable" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.keywordTotalInTable */
+    	INTO   TB_WTM_STAT_KEYWORD 
+			 ( YEAR
+		<choose>
+			<when test='div == "MS"'>, MONTH</when>
+			<when test='div == "WS"'>, MONTH, WEEK</when>
+			<when test='div == "DS"'>, MONTH, WEEK, DAY</when>
+			<when test='div == "HS"'>, MONTH, WEEK, DAY, HOUR</when>
+		</choose>	 
+			 , CLS_LABEL, KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV )
+		SELECT #{year}
+		<choose>
+			<when test='div == "MS"'>, #{month}</when>
+			<when test='div == "WS"'>, #{month}, #{week}</when>
+			<when test='div == "DS"'>, #{month}, #{week}, #{day}</when>
+			<when test='div == "HS"'>, #{month}, #{week}, #{day}, #{hour}</when>
+		</choose>	 
+			 , CLS_LABEL
+			 , KEYWORD
+			 , INOUT_SC_CD
+			 , CHANNEL_SC_CD
+			 , SUM(COUNT)
+			 , #{div}
+		FROM   TB_WTM_STAT_KEYWORD
+		WHERE  1 = 1
+		<choose>
+			<when test='div == "YS"'> AND YEAR = #{year} AND DIV = 'MS'</when>
+			<when test='div == "MS"'> AND YEAR = #{year} AND MONTH = #{month} AND DIV = 'DS'</when>
+			<when test='div == "WS" and isLastWeek == "N"'>	AND YEAR = #{year} AND WEEK = #{week} AND DIV = 'DS'</when>
+			<when test='div == "WS" and isLastWeek == "Y"'>	AND ( (YEAR = #{year} AND MONTH != 1 ) OR YEAR = #{plusYear} ) AND WEEK = #{week} AND DIV = 'DS'</when>
+			<when test='div == "DS"'> AND YEAR = #{year} AND MONTH = #{month} AND DAY = #{day} AND DIV = 'HS'</when>
+			<when test='div == "HS"'> AND YEAR = #{year} AND MONTH = #{month} AND DAY = #{day} AND HOUR = #{hour} AND DIV = 'TS'</when>
+		</choose>
+		GROUP BY CLS_LABEL, KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD
+    </insert>
+    
+    <!-- 키워드 집계 업데이트 (시) -->
+    <!-- foreach 삭제 -->
+    <update id="keywordTotalUpHour" parameterType="hashMap">
+		INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.keywordTotalUpHour */
+		INTO   TB_WTM_STAT_KEYWORD (YEAR, MONTH, WEEK, DAY, HOUR, CLS_LABEL, KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV)
+		<foreach collection="hourList" item="hour" index="index" separator="UNION ALL">
+			SELECT #{year} AS "YEARU"
+				 , #{month} AS "MONTHU"
+				 , #{week} AS "WEEKU"
+				 , #{day} AS "DAYU"
+				 , #{hour} AS "HOURU"
+				 , CLS_LABEL
+				 , KEYWORD
+				 , INOUT_SC_CD
+				 , CHANNEL_SC_CD
+				 , SUM(COUNT) AS "COUNT"
+				 , #{div} AS "DIV"
+			FROM   TB_WTM_STAT_KEYWORD
+			WHERE  YEAR = #{year}
+			  AND  MONTH = #{month}
+			  AND  WEEK = #{week}
+			  AND  DAY = #{day}
+			  AND  HOUR = #{hour}
+			GROUP BY CLS_LABEL, KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD
+    	</foreach>
+    </update>
+    
+    <!-- 유형/감성분석 집계 당일데이터 삭제 -->
+	<delete id="clsSentDelete" parameterType="hashMap">
+		DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.clsSentDelete */
+		FROM   TB_WTM_STAT_CLASS
+		WHERE  YEAR = #{year}
+		  AND  MONTH = #{month}
+		  AND  DAY = #{day}
+	</delete>
+    
+    <!-- 유형/감성분석 집계 (분) -->
+    <insert id="claSentTotal" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.claSentTotal */
+    	INTO   TB_WTM_STAT_CLASS (YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, CLS_LABEL, SENT_CLS_CD, BLNT_BRNO, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV, CUST_SC_CD)
+		SELECT #{year}
+			 , #{month}
+			 , #{week}
+			 , #{day}
+			 , #{hour}
+			 , #{minute}
+			 , CASE WHEN c.RESULT_CD = '102500' 
+			 		THEN 'NOLABL' 
+			 		ELSE c.CLS_LABEL 
+			   END AS CLS_LABEL
+			 , s.SENT_CLS_CD
+			 , s.BLNT_BRNO
+			 , s.INOUT_SC_CD
+			 , s.CHANNEL_SC_CD
+			 , COUNT(s.CALL_ID) AS "COUNT" 
+			 , #{div}
+			 , s.CUST_SC_CD
+		FROM   TB_WTM_IS_SESS s
+		LEFT OUTER JOIN TB_WTM_IS_BS_CLASS c
+			    	 ON c.CALL_ID = s.CALL_ID
+		WHERE  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{startTime}
+		  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{endTime}
+		  AND ((s.INOUT_SC_CD = 'I' AND c.CLS_FLAG = '1')
+		    OR (s.INOUT_SC_CD = 'O'))
+		  AND  s.ANA_STATUS IN ('400300', '400400')
+		GROUP BY c.CLS_LABEL, s.SENT_CLS_CD, s.BLNT_BRNO, s.INOUT_SC_CD, s.CHANNEL_SC_CD, c.RESULT_CD, c.CLS_LABEL, s.CUST_SC_CD
+    </insert>
+    
+    <!-- 유형/감성분석 집계 업데이트 (분) -->
+    <update id="claSentTotalUpMin" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.claSentTotalUpMin */
+    	INTO   TB_WTM_STAT_CLASS (YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, CLS_LABEL, SENT_CLS_CD, BLNT_BRNO, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV, CUST_SC_CD)
+		<foreach collection="minList" item="time" index="index" separator="UNION ALL">
+			SELECT #{year} AS "YEAR"
+				 , #{month} AS "MONTH"
+				 , #{week} AS "WEEK"
+				 , #{day} AS "DAY"
+				 , #{time.hour} AS "HOUR"
+				 , #{time.minute} AS "MINUTE"
+				 , CASE WHEN c.RESULT_CD = '102500' 
+				 		THEN 'NOLABL' 
+				 		ELSE c.CLS_LABEL 
+				   END AS CLS_LABEL
+				 , s.SENT_CLS_CD
+				 , s.BLNT_BRNO
+				 , s.INOUT_SC_CD
+				 , s.CHANNEL_SC_CD
+				 , COUNT(s.CALL_ID) AS "COUNT" 
+				 , #{div} AS "DIV"
+			 	 , s.CUST_SC_CD
+			FROM   TB_WTM_IS_SESS s 
+			LEFT OUTER JOIN TB_WTM_IS_BS_CLASS c
+				    	 ON c.CALL_ID = s.CALL_ID
+			WHERE  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{time.startTime}
+			  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{time.endTime}
+			  AND ((s.INOUT_SC_CD = 'I' AND c.CLS_FLAG = '1')
+			    OR (s.INOUT_SC_CD = 'O'))
+		 	  AND  s.ANA_STATUS IN ('400300', '400400')
+			GROUP BY c.CLS_LABEL, s.SENT_CLS_CD, s.BLNT_BRNO, s.INOUT_SC_CD, s.CHANNEL_SC_CD, c.RESULT_CD, c.CLS_LABEL, s.CUST_SC_CD
+		</foreach>
+    </update>
+    
+    <!-- 유형/감성분석 집계 (시/일/주/월/연) -->
+    <insert id="claSentTotalInTable" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.claSentTotalInTable */
+    	INTO   TB_WTM_STAT_CLASS 
+			 ( YEAR
+		<choose>
+			<when test='div == "MS"'>, MONTH</when>
+			<when test='div == "WS"'>, MONTH, WEEK</when>
+			<when test='div == "DS"'>, MONTH, WEEK, DAY</when>
+			<when test='div == "HS"'>, MONTH, WEEK, DAY, HOUR</when>
+		</choose>	
+			 , CLS_LABEL, SENT_CLS_CD, BLNT_BRNO, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV, CUST_SC_CD )
+		SELECT #{year}
+		<choose>
+			<when test='div == "MS"'>, #{month}</when>
+			<when test='div == "WS"'>, #{month}, #{week}</when>
+			<when test='div == "DS"'>, #{month}, #{week}, #{day}</when>
+			<when test='div == "HS"'>, #{month}, #{week}, #{day}, #{hour}</when>
+		</choose>
+			 , CLS_LABEL
+			 , SENT_CLS_CD
+			 , BLNT_BRNO
+			 , INOUT_SC_CD
+			 , CHANNEL_SC_CD
+			 , SUM(COUNT)
+			 , #{div}
+			 , CUST_SC_CD
+		FROM   TB_WTM_STAT_CLASS
+		WHERE  1 = 1
+		<choose>
+			<when test='div == "YS"'> AND YEAR = #{year} AND DIV = 'MS'</when>
+			<when test='div == "MS"'> AND YEAR = #{year} AND MONTH = #{month} AND DIV = 'DS'</when>
+			<when test='div == "WS" and isLastWeek == "N"'>	AND YEAR = #{year} AND WEEK = #{week} AND DIV = 'DS'</when>
+			<when test='div == "WS" and isLastWeek == "Y"'>	AND ( (YEAR = #{year} AND MONTH != 1 ) OR YEAR = #{plusYear} ) AND WEEK = #{week} AND DIV = 'DS'</when>
+			<when test='div == "DS"'> AND YEAR = #{year} AND MONTH = #{month} AND DAY = #{day} AND DIV = 'HS'</when>
+			<when test='div == "HS"'> AND YEAR = #{year} AND MONTH = #{month} AND DAY = #{day} AND HOUR = #{hour} AND DIV = 'TS'</when>
+		</choose>
+		GROUP BY CLS_LABEL, SENT_CLS_CD, BLNT_BRNO, INOUT_SC_CD, CHANNEL_SC_CD, CUST_SC_CD
+    </insert>
+    
+    <!-- 유형/감성분석 집계 업데이트 (시) -->
+    <update id="claSentTotalUpHour" parameterType="hashMap">
+		INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.claSentTotalUpHour */
+		INTO   TB_WTM_STAT_CLASS (YEAR, MONTH, WEEK, DAY, HOUR, CLS_LABEL, SENT_CLS_CD, BLNT_BRNO, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV, CUST_SC_CD)
+		<foreach collection="hourList" item="hour" index="index" separator="UNION ALL">
+			SELECT #{year} AS "YEARU"
+				 , #{month} AS "MONTHU"
+				 , #{week} AS "WEEKU"
+				 , #{day} AS "DAYU"
+				 , #{hour} AS "HOURU"
+				 , CLS_LABEL
+				 , SENT_CLS_CD
+				 , BLNT_BRNO
+				 , INOUT_SC_CD
+				 , CHANNEL_SC_CD
+				 , SUM(COUNT) AS "COUNT"
+				 , #{div} AS "DIV"
+				 , CUST_SC_CD
+			FROM   TB_WTM_STAT_CLASS
+			WHERE  YEAR = #{year}
+			  AND  MONTH = #{month}
+			  AND  WEEK = #{week}
+			  AND  DAY = #{day}
+			  AND  HOUR = #{hour}
+			GROUP BY CLS_LABEL, SENT_CLS_CD, BLNT_BRNO, INOUT_SC_CD, CHANNEL_SC_CD, CUST_SC_CD
+    	</foreach>
+    </update>
+    
+    <!-- 상담사별 감성분석 집계 당일데이터 삭제 -->
+	<delete id="agentSentDelete" parameterType="hashMap">
+		DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.agentSentDelete */
+		FROM   TB_WTM_STAT_SENTIMENT
+		WHERE  YEAR = #{year}
+		  AND  MONTH = #{month}
+		  AND  DAY = #{day}
+	</delete>
+    
+    <!-- 상담사별 감성분석 집계 (분) -->
+    <insert id="agentSentTotal" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.agentSentTotal */
+    	INTO   TB_WTM_STAT_SENTIMENT (YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, AGENT_ID, SENT_CLS_CD, COUNT, DIV)
+		SELECT #{year}
+			 , #{month}
+			 , #{week}
+			 , #{day}
+			 , #{hour}
+			 , #{minute}
+			 , s.AGENT_ID		
+			 , s.SENT_CLS_CD
+			 , COUNT(s.CALL_ID) AS "COUNT" 
+			 , #{div}
+		FROM   TB_WTM_IS_SESS s 
+		WHERE  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{startTime}
+		  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{endTime}
+		  AND  s.ANA_STATUS IN ('400300','400400')
+		GROUP BY s.AGENT_ID, s.SENT_CLS_CD
+    </insert>
+    
+    <!-- 상담사별 감성분석 집계 업데이트 (분) -->
+    <update id="agentSentTotalUpMin" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.agentSentTotalUpMin */
+    	INTO   TB_WTM_STAT_SENTIMENT (YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, AGENT_ID, SENT_CLS_CD, COUNT, DIV)
+		<foreach collection="minList" item="time" index="index" separator="UNION ALL">
+			SELECT #{year} AS "YEAR"
+				 , #{month} AS "MONTH"
+				 , #{week} AS "WEEK"
+				 , #{day} AS "DAY"
+				 , #{time.hour} AS "HOUR"
+				 , #{time.minute} AS "MINUTE"
+				 , s.AGENT_ID		
+				 , s.SENT_CLS_CD
+				 , COUNT(s.CALL_ID) AS "COUNT" 
+				 , #{div} AS "DIV"
+			FROM   TB_WTM_IS_SESS s 
+			WHERE  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{time.startTime}
+			  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{time.endTime}
+			  AND  s.ANA_STATUS IN ('400300','400400')
+			GROUP BY s.AGENT_ID, s.SENT_CLS_CD
+		</foreach>
+    </update>
+    
+    <!-- 상담사별 감성분석 집계 (시/일/주/월/연) -->
+    <!-- 정리 필요... -->
+    <insert id="agentSentTotalInTable" parameterType="hashMap">
+		INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.agentSentTotalInTable */
+		INTO   TB_WTM_STAT_SENTIMENT 
+			 ( YEAR
+		<choose>
+			<when test='div == "MS"'>, MONTH</when>
+			<when test='div == "WS"'>, MONTH, WEEK</when>
+			<when test='div == "DS"'>, MONTH, WEEK, DAY</when>
+			<when test='div == "HS"'>, MONTH, WEEK, DAY, HOUR</when>
+		</choose>	
+			 , AGENT_ID, SENT_CLS_CD, COUNT, DIV )
+		SELECT #{year}
+		<choose>
+			<when test='div == "MS"'>, #{month}</when>
+			<when test='div == "WS"'>, #{month}, #{week}</when>
+			<when test='div == "DS"'>, #{month}, #{week}, #{day}</when>
+			<when test='div == "HS"'>, #{month}, #{week}, #{day}, #{hour}</when>
+		</choose>
+			 , AGENT_ID		
+			 , SENT_CLS_CD
+			 , SUM(COUNT)
+			 , #{div}
+		FROM   TB_WTM_STAT_SENTIMENT
+		WHERE  1 = 1
+		<choose>
+			<when test='div == "YS"'> AND YEAR = #{year} AND DIV = 'MS'</when>
+			<when test='div == "MS"'> AND YEAR = #{year} AND MONTH = #{month} AND DIV = 'DS'</when>
+			<when test='div == "WS" and isLastWeek == "N"'>	AND YEAR = #{year} AND WEEK = #{week} AND DIV = 'DS'</when>
+			<when test='div == "WS" and isLastWeek == "Y"'>	AND ( (YEAR = #{year} AND MONTH != 1 ) OR YEAR = #{plusYear} ) AND WEEK = #{week} AND DIV = 'DS'</when>
+			<when test='div == "DS"'> AND YEAR = #{year} AND MONTH = #{month} AND DAY = #{day} AND DIV = 'HS'</when>
+			<when test='div == "HS"'> AND YEAR = #{year} AND MONTH = #{month} AND DAY = #{day} AND HOUR = #{hour} AND DIV = 'TS'</when>
+		</choose>
+		GROUP BY AGENT_ID, SENT_CLS_CD
+    </insert>
+    
+    <!-- 상담사별 감성분석 집계 업데이트 (시) -->
+    <update id="agentSentTotalUpHour" parameterType="hashMap">
+		INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.agentSentTotalUpHour */
+		INTO   TB_WTM_STAT_SENTIMENT (YEAR, MONTH, WEEK, DAY, HOUR, AGENT_ID, SENT_CLS_CD, COUNT, DIV)
+		<foreach collection="hourList" item="hour" index="index" separator="UNION ALL">
+			SELECT #{year} AS "YEARU"
+				 , #{month} AS "MONTHU"
+				 , #{week} AS "WEEKU"
+				 , #{day} AS "DAYU"
+				 , #{hour} AS "HOURU"
+				 , AGENT_ID		
+				 , SENT_CLS_CD
+				 , SUM(COUNT) AS "COUNT"
+				 , #{div} AS "DIV"
+			FROM   TB_WTM_STAT_SENTIMENT
+			WHERE  YEAR = #{year}
+			  AND  MONTH = #{month}
+			  AND  WEEK = #{week}
+			  AND  DAY = #{day}
+			  AND  HOUR = #{hour}
+			GROUP BY AGENT_ID, SENT_CLS_CD
+    	</foreach>
+    </update>
+    
+    <!-- 금칙어 집계 당일데이터 삭제 -->
+	<delete id="stopwordDelete" parameterType="hashMap">
+		DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.stopwordDelete */
+		FROM   TB_WTM_STAT_STOPWORD
+		WHERE  YEAR = #{year}
+		  AND  MONTH = #{month}
+		  AND  DAY = #{day}
+	</delete>
+    
+    <!-- 금칙어 집계 (분) -->
+    <insert id="stopwordTotal" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.stopwordTotal */
+    	INTO   TB_WTM_STAT_STOPWORD (YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV, DIC_TYPE)
+		SELECT #{year}
+			 , #{month}
+			 , #{week}
+			 , #{day}
+			 , #{hour}
+			 , #{minute}
+			 , st.KEYWORD
+			 , s.INOUT_SC_CD
+			 , s.CHANNEL_SC_CD
+			 , SUM(st.COUNT) 
+			 , #{div}
+			 , #{dicType}
+		FROM   TB_WTM_IS_BS_STOPWORD st
+		INNER JOIN TB_WTM_IS_SESS s 
+			    ON st.CALL_ID = s.CALL_ID
+		WHERE  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{startTime}
+		  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{endTime}
+		  AND  st.DIC_TYPE = #{dicType}
+		  AND  s.ANA_STATUS IN ('400300','400400')
+		GROUP BY st.KEYWORD, s.INOUT_SC_CD, s.CHANNEL_SC_CD
+    </insert>
+    
+    <!-- 금칙어 집계 업데이트 (분) -->
+    <update id="stopwordTotalUpMin" parameterType="hashMap">
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.stopwordTotalUpMin */
+    	INTO   TB_WTM_STAT_STOPWORD (YEAR, MONTH, WEEK, DAY, HOUR, MINUTE, KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV, DIC_TYPE)
+		<foreach collection="minList" item="time" index="index" separator="UNION ALL">
+			SELECT #{year} AS "YEAR"
+				 , #{month} AS "MONTH"
+				 , #{week} AS "WEEK"
+				 , #{day} AS "DAY"
+				 , #{time.hour} AS "HOUR"
+				 , #{time.minute} AS "MINUTE"
+				 , st.KEYWORD
+				 , s.INOUT_SC_CD
+				 , s.CHANNEL_SC_CD
+				 , SUM(st.COUNT) AS "COUNT"
+				 , #{div} AS "DIV"
+				 , #{dicType}
+			FROM   TB_WTM_IS_BS_STOPWORD st
+			INNER JOIN TB_WTM_IS_SESS s 
+				    ON st.CALL_ID = s.CALL_ID
+			WHERE  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{time.startTime}
+			  AND  TO_CHAR(s.CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{time.endTime}
+			  AND  st.DIC_TYPE = #{dicType}
+			  AND  s.ANA_STATUS IN ('400300','400400')
+			GROUP BY st.KEYWORD, s.INOUT_SC_CD, s.CHANNEL_SC_CD
+		</foreach>
+    </update>
+    
+    <!-- 금칙어 집계 (시/일/주/월/연) -->
+    <insert id="stopwordTotalInTable" parameterType="hashMap"> 
+		INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.stopwordTotalInTable */
+		INTO   TB_WTM_STAT_STOPWORD 
+			 ( YEAR
+		<choose>
+			<when test='div == "MS"'>, MONTH</when>
+			<when test='div == "WS"'>, MONTH, WEEK</when>
+			<when test='div == "DS"'>, MONTH, WEEK, DAY</when>
+			<when test='div == "HS"'>, MONTH, WEEK, DAY, HOUR</when>
+		</choose>
+			 , KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV, DIC_TYPE )
+		SELECT #{year}
+		<choose>
+			<when test='div == "MS"'>, #{month}</when>
+			<when test='div == "WS"'>, #{month}, #{week}</when>
+			<when test='div == "DS"'>, #{month}, #{week}, #{day}</when>
+			<when test='div == "HS"'>, #{month}, #{week}, #{day}, #{hour}</when>
+		</choose>
+			 , KEYWORD
+			 , INOUT_SC_CD
+			 , CHANNEL_SC_CD
+			 , SUM(COUNT)
+			 , #{div}
+			 , #{dicType}
+		FROM   TB_WTM_STAT_STOPWORD
+		WHERE  1 = 1
+		<choose>
+			<when test='div == "YS"'> AND YEAR = #{year} AND DIV = 'MS'</when>
+			<when test='div == "MS"'> AND YEAR = #{year} AND MONTH = #{month} AND DIV = 'DS'</when>
+			<when test='div == "WS" and isLastWeek == "N"'>	AND YEAR = #{year} AND WEEK = #{week} AND DIV = 'DS'</when>
+			<when test='div == "WS" and isLastWeek == "Y"'>	AND ( (YEAR = #{year} AND MONTH != 1 ) OR YEAR = #{plusYear} ) AND WEEK = #{week} AND DIV = 'DS'</when>
+			<when test='div == "DS"'> AND YEAR = #{year} AND MONTH = #{month} AND DAY = #{day} AND DIV = 'HS'</when>
+			<when test='div == "HS"'> AND YEAR = #{year} AND MONTH = #{month} AND DAY = #{day} AND HOUR = #{hour} AND DIV = 'TS'</when>
+		</choose>
+		  AND  DIC_TYPE = #{dicType}
+		GROUP BY KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD
+    </insert>
+    
+    <!-- 금칙어 집계 업데이트 (시) -->
+    <update id="stopwordTotalUpHour" parameterType="hashMap">
+		INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.stopwordTotalUpHour */
+		INTO   TB_WTM_STAT_STOPWORD (YEAR, MONTH, WEEK, DAY, HOUR, KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD, COUNT, DIV, DIC_TYPE)
+		<foreach collection="hourList" item="hour" index="index" separator="UNION ALL">
+			SELECT #{year} AS "YEARU"
+				 , #{month} AS "MONTHU"
+				 , #{week} AS "WEEKU"
+				 , #{day} AS "DAYU"
+				 , #{hour} AS "HOURU"
+				 , KEYWORD
+				 , INOUT_SC_CD
+				 , CHANNEL_SC_CD
+				 , SUM(COUNT) AS "COUNT"
+				 , #{div} AS "DIV"
+				 , #{dicType}
+			FROM   TB_WTM_STAT_STOPWORD
+			WHERE  YEAR = #{year}
+			  AND  MONTH = #{month}
+			  AND  WEEK = #{week}
+			  AND  DAY = #{day}
+			  AND  HOUR = #{hour}
+			  AND  DIC_TYPE = #{dicType}
+			GROUP BY KEYWORD, INOUT_SC_CD, CHANNEL_SC_CD
+    	</foreach>
+    </update>
+    
+    <!-- STT 집계 완료상태 업데이트 -->
+    <update id="updateTotalStatus" parameterType="hashMap">
+    	UPDATE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.updateTotalStatus */
+			   TB_WTM_IS_SESS
+    	SET    ANA_STATUS = '400400'
+    	WHERE  TO_CHAR(CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> #{startTime}
+		  AND  TO_CHAR(CALL_END_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> #{endTime}
+		  AND  ANA_STATUS = '400300'
+    </update>
+    
+    <!-- 반복민원 데이터 조회 -->
+    <select id="getSendMsgInfo" resultType="hashmap">
+		SELECT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.getSendMsgInfo */
+			   T1.USER_ID_LIST
+			 , T2.CUST_ID_LIST
+			 , T2.CUST_ID_CNT
+		FROM ( SELECT '["'||LISTAGG(USER_ID, '","')||'"]' AS USER_ID_LIST
+			   FROM   WISETM_USER_INFO wui 
+			   WHERE  ALARM_YN = 'Y' ) T1
+		   , ( SELECT '['||LISTAGG(CUST_ID, ',')||']' AS CUST_ID_LIST
+		   		 	, COUNT(*) AS CUST_ID_CNT
+		   	   FROM ( SELECT CUST_ID, COUNT(*)
+					  FROM   TB_WTM_IS_SESS TWIS
+					  WHERE  CUST_ID IS NOT NULL
+					    AND  ANA_STATUS IN ('400300', '400400')
+					    AND  TO_CHAR(CALL_START_DT, 'YYYYMMDDHH24MISS') <![CDATA[>=]]> TO_CHAR(CURRENT_TIMESTAMP + INTERVAL '-1' DAY, 'YYYYMMDD')||'090000'
+						AND  TO_CHAR(CALL_START_DT, 'YYYYMMDDHH24MISS') <![CDATA[<]]> TO_CHAR(CURRENT_TIMESTAMP, 'YYYYMMDD')||'090000'
+					  GROUP BY CUST_ID
+					  HAVING COUNT(*) >= 3 ) TMP
+		   	 ) T2
+		WHERE  CUST_ID_LIST != '[]'    	
+    </select>
+    
+    <!-- EDW 발송대상 조회 -->
+	<resultMap id="edwSendMap" type="hashmap">
+		<result property="callId"		column="CALL_ID"		jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="sttId" 		column="STT_ID"			jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="recId"		column="REC_ID"			jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="agentId"		column="AGENT_ID"		jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="custId"		column="CUST_ID"		jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="inoutScCd"	column="INOUT_SC_CD"	jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="channelScCd"	column="CHANNEL_SC_CD"	jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="callStartDt"	column="CALL_START_DT"	jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="callEndDt"	column="CALL_END_DT"	jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="cCode"		column="C_CODE"			jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="cName"		column="C_NAME"			jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="cScore"		column="C_SCORE"		jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="clsLabel"		column="CLS_LABEL"		jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="sScore"		column="S_SCORE"		jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="rsltKw"		column="RSLT_KW"		jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="summString"	column="SUMM_STRING"	jdbcType="VARCHAR"	javaType="java.lang.String" />
+		<result property="rsltSw"		column="RSLT_SW"		jdbcType="VARCHAR"	javaType="java.lang.String" />
+	</resultMap>
+    
+	<select id="getSendEdwList" resultMap="edwSendMap">
+		SELECT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.getEdwSendList */
+			   TWIS.CALL_ID 																/* 상담세션 - 상담 ID */
+			 , TWIS.STT_ID 																	/* 상담세션 - STT ID */
+			 , TWIS.REC_ID 																	/* 상담세션 - 녹취 ID */ 
+			 , TWIS.AGENT_ID 																/* 상담세션 - 상담사 ID */
+			 , TWIS.CUST_ID 																/* 상담세션 - 고객 ID */
+			 , TWIS.INOUT_SC_CD 															/* 상담세션 - 매체구분코드 */
+			 , TWIS.CHANNEL_SC_CD 															/* 상담세션 - 채널구분코드 */
+			 , TO_CHAR(TWIS.CALL_START_DT, 'YYYY.MM.DD HH24:MI:SS') AS CALL_START_DT 		/* 상담세션 - 콜 시작시간 */
+			 , TO_CHAR(TWIS.CALL_END_DT, 'YYYY.MM.DD HH24:MI:SS') AS CALL_END_DT  			/* 상담세션 - 콜 종료시간 */
+			 , TWIBC.LD_CLS_CD||TWIBC.MD_CLS_CD||TWIBC.SD_CLS_CD AS C_CODE 					/* 유형분류 - 유형분류코드 */
+			 , CASE WHEN TWIBC.LD_CLS_NM IS NULL
+			 		THEN ' '
+			 		ELSE TWIBC.LD_CLS_NM||'>'||TWIBC.MD_CLS_NM||'>'||TWIBC.SD_CLS_NM
+			   END AS C_NAME 																/* 유형분류 - 유형분류코드명 */
+			 , TWIBC.SCORE AS C_SCORE 														/* 유형분류 - 스코어 */
+			 , CASE TWIS.SENT_CLS_CD
+			 	WHEN '300001' THEN '긍정'
+			 	WHEN '300002' THEN '부정'
+			    ELSE '없음'
+			   END AS CLS_LABEL																/* 감성분석 - 감성분류라벨 */
+			 , CASE TWIS.SENT_CLS_CD
+			 	WHEN '300001' THEN 100.00 - TWIS.SENT_CLS_PT
+			 	WHEN '300002' THEN TWIS.SENT_CLS_PT
+			    ELSE 0.00
+			   END AS S_SCORE					 											/* 감성분석 - 감성스코어(비율) */
+			 , TWIBK.RSLT_KW 																/* 키워드분석 - 분석결과 */
+			 , TWIBSM.SUMM_STRING 															/* 요약분석 - 요약문 */
+			 , TWIBSW.RSLT_SW 																/* 금칙어 - 추출결과 */
+		FROM   TB_WTM_IS_SESS TWIS															/* 상담세션 */
+		LEFT OUTER JOIN TB_WTM_IS_BS_CLASS TWIBC							/* 유형분류 */
+					 ON TWIBC.CALL_ID = TWIS.CALL_ID
+		LEFT OUTER JOIN (SELECT CALL_ID
+							  , JSON_ARRAYAGG(
+							  		JSON_OBJECT(
+							  			'keyword' VALUE KEYWORD
+							  		  , 'score' VALUE TO_CHAR(SCORE, 'fm999990.000')
+							  		  , 'count' VALUE COUNT
+							  		) RETURNING CLOB
+							  	) AS RSLT_KW
+						 FROM   TB_WTM_IS_BS_KEYWORD
+						 GROUP BY CALL_ID) TWIBK
+					 ON TWIBK.CALL_ID = TWIS.CALL_ID						/* 키워드 분석 */
+		INNER JOIN (SELECT CALL_ID
+						 , JSON_ARRAYAGG(
+								JSON_OBJECT(
+						  			'summ' VALUE SUMM_STRING
+						  		) RETURNING CLOB
+						   ) AS SUMM_STRING
+					FROM   TB_WTM_IS_BS_SUMM
+					GROUP BY CALL_ID) TWIBSM								/* 요약분석 */
+				ON TWIBSM.CALL_ID = TWIS.CALL_ID
+		INNER JOIN (SELECT CALL_ID
+						 , JSON_ARRAYAGG(
+						  		JSON_OBJECT(
+						  			'keyword' VALUE KEYWORD
+						  		  , 'count' VALUE COUNT
+						  		) RETURNING CLOB
+						   ) AS RSLT_SW
+					FROM   TB_WTM_IS_BS_STOPWORD
+					GROUP BY CALL_ID) TWIBSW
+				ON TWIBSW.CALL_ID = TWIS.CALL_ID							/* 금칙어 */
+		WHERE  TWIS.CUST_ID IS NOT NULL
+		  AND  TO_CHAR(TWIS.ANA_COMP_DT, 'YYYYMMDDHH24MI') <![CDATA[>=]]> TO_CHAR(CURRENT_TIMESTAMP + INTERVAL '-10' MINUTE, 'YYYYMMDDHH24MI')
+		  AND  TO_CHAR(TWIS.ANA_COMP_DT, 'YYYYMMDDHH24MI') <![CDATA[<]]> TO_CHAR(CURRENT_TIMESTAMP, 'YYYYMMDDHH24MI')
+	</select>
+	
+	<!-- 세션테이블 고객정보 업데이트 -->
+	<update id="mergeCustInfo" parameterType="hashmap">
+		MERGE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.mergeCustInfo */
+			  INTO TB_WTM_IS_SESS T1
+		USING ( SELECT T.*
+					 , FLOOR((CAST(YR AS NUMBER) - CAST(BIRTH_YEAR AS NUMBER)) / 10) * 10 AS AGE_CD
+				FROM ( SELECT 
+						       UNIQUEKEY
+						     , CUST_NO
+						     , JUMNNO
+						     , NFFCUNNDSCD
+						     , KWTH00
+						     , CASE WHEN SUBSTR(JUMNNO,7,1) IN (1,3)
+						     		THEN 1
+						     		WHEN SUBSTR(JUMNNO,7,1) IN (2,4)
+						     		THEN 2
+						       END AS GENDER
+						     , CASE WHEN SUBSTR(JUMNNO,7,1) IN (1,2)
+						     		THEN '19'||SUBSTR(JUMNNO,0,2)
+						     		WHEN SUBSTR(JUMNNO,7,1) IN (3,4)
+						     		THEN '20'||SUBSTR(JUMNNO,0,2)
+						       END AS BIRTH_YEAR
+						     , TO_CHAR(CURRENT_DATE, 'YYYY') AS YR
+						FROM   TMUSER.KRKWANRY 
+						WHERE  CONCAT(DRILJA,DRTIME) <![CDATA[>=]]> #{startTime}
+						  AND  CONCAT(DRILJA,DRTIME) <![CDATA[<]]> #{endTime} ) T
+			  ) T2
+		   ON ( T1.CALL_ID = T2.UNIQUEKEY )
+		WHEN MATCHED THEN
+		UPDATE SET T1.GNDR_CD = T2.GENDER
+				 , T1.CUST_ID = T2.CUST_NO
+				 , T1.AGE_CD = T2.AGE_CD
+				 , T1.AP_CLS_LABEL = T2.KWTH00
+				 , T1.CUST_SC_CD = T2.NFFCUNNDSCD
+	</update>
+	
+	<!-- =========================================================================================================================================== -->	
+	<!-- 재분석 작업을 위한 쿼리 -->	
+	<!-- 자동분류 저장 -->
+    <!-- todo :: SCORE컬럼 추가 확인 -->
+    <insert id="insertClassifireResult" parameterType="hashMap">
+		<selectKey resultType="int" keyProperty="clsId" order="BEFORE">
+		   SELECT COALESCE(MAX(CLS_ID),0) + 1 
+		   FROM   TB_WTM_IS_BS_CLASS
+		</selectKey>
+		
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.insertClassifireResult */
+    	INTO   TB_WTM_IS_BS_CLASS (CLS_ID, CALL_ID, CLS_SC_CD, RESULT_CD, LD_CLS_CD, LD_CLS_NM, MD_CLS_CD, MD_CLS_NM, SD_CLS_CD, SD_CLS_NM, CLS_LABEL, CONFIDENCE, SCORE
+		<if test='clsFlag != null and clsFlag !=""'>
+		    , CLS_FLAG
+		</if>
+    		)
+    	VALUES ( #{clsId}
+			   , #{applicationId}
+			   , '01'
+			   , #{resultCd}
+			   , #{ldClsCd}
+			   , (SELECT CSELTYPENM FROM TB_WTM_IS_CLSCODE WHERE CSELTYPECD = #{ldClsCd})
+			   , #{mdClsCd}
+			   , (SELECT CSELTYPENM FROM TB_WTM_IS_CLSCODE WHERE CSELTYPECD = #{mdClsCdForNm})
+			   , #{sdClsCd}
+			   , (SELECT CSELTYPENM FROM TB_WTM_IS_CLSCODE WHERE CSELTYPECD = #{clsLabel})
+			   , #{clsLabel}
+			   , #{confidence}
+			   , #{score}
+		<if test='clsFlag != null and clsFlag !=""'>
+			   , #{clsFlag}
+		</if>
+    	)
+    </insert>
+	
+	<!-- 감성분석 저장 -->
+    <insert id="insertSentimentResult" parameterType="hashMap">
+		<selectKey resultType="int" keyProperty="sentId" order="BEFORE">
+		   SELECT COALESCE(MAX(SENT_ID),0) + 1 
+		   FROM   TB_WTM_IS_BS_SENT
+		</selectKey>
+
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.insertSentimentResult */
+    	INTO   TB_WTM_IS_BS_SENT (SENT_ID, CALL_ID, CONTENT_ID, CONTENTS , RESULT_CD, CLS_LABEL, CONFIDENCE, SCORE)
+    	VALUES ( 
+    		  #{sentId}
+    		, #{applicationId}
+    		, #{contentId}
+    		, #{contents}
+    		, #{resultCd}
+    		, #{clsLabel}
+    		, #{confidence}
+    		, #{score}
+    	)
+    </insert>
+	
+    <!-- 키워드 추출 저장 -->
+	<!--   todo :: tag 추가되는지 확인 -->
+    <insert id="insertKeywordExtractionResult" parameterType="hashMap">
+		<selectKey resultType="int" keyProperty="wordId" order="BEFORE">
+		   SELECT COALESCE(MAX(WORD_ID),0) + 1 FROM TB_WTM_IS_BS_KEYWORD
+		</selectKey>
+
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.insertKeywordExtractionResult */
+    	INTO   TB_WTM_IS_BS_KEYWORD (WORD_ID, CALL_ID, RESULT_CD, KEYWORD, SCORE, COUNT)
+    	VALUES ( #{wordId}
+			   , #{applicationId}
+			   , #{resultCd}
+			   , #{keyword}
+			   , #{score}
+			   , #{count}
+			   )
+    </insert>
+	
+	<!-- 연관어 추출 저장 -->
+	<insert id="insertRelatedKeywordExtractionResult" parameterType="hashMap">
+		<selectKey resultType="int" keyProperty="wordId" order="BEFORE">
+		   SELECT COALESCE(MAX(WORD_ID),0) + 1 
+		   FROM   TB_WTM_IS_BS_RELWORD
+		</selectKey>
+
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.insertRelatedKeywordExtractionResult */
+    	INTO   TB_WTM_IS_BS_RELWORD (WORD_ID, CALL_ID, RESULT_CD, KEYWORD, RWORD01, SCORE01
+    	<if test='rword02 != null and rword02 !=""'>
+    		, RWORD02
+    		, SCORE02
+    	</if>
+    	<if test='rword03 != null and rword03 !=""'>
+    		, RWORD03
+    		, SCORE03
+		</if>
+		<if test='rword04 != null and rword04 !=""'>
+		    , RWORD04
+    		, SCORE04
+		</if>
+    	<if test='rword05 != null and rword05 !=""'>
+		    , RWORD05
+    		, SCORE05
+		</if>
+    		)
+    	VALUES ( 
+    		  #{wordId}
+    		, #{applicationId}
+			, #{resultCd}
+			, #{keyword}
+			, #{rword01}
+			, #{score01}
+		<if test='rword02 != null and rword02 !=""'>
+			, #{rword02}
+			, #{score02}
+		</if>
+		<if test='rword03 != null and rword03 !=""'>
+			, #{rword03}
+			, #{score03}
+		</if>
+		<if test='rword04 != null and rword04 !=""'>
+			, #{rword04}
+			, #{score04}
+		</if>
+	    <if test='rword05 != null and rword05 !=""'>
+			, #{rword05}
+			, #{score05}
+		</if>
+    		)
+    </insert>
+	
+	<!-- 문서요약 저장 -->
+    <insert id="insertSummarizeResult" parameterType="hashMap">
+		<selectKey resultType="int" keyProperty="summId" order="BEFORE">
+		   SELECT COALESCE(MAX(SUMM_ID),0) + 1 FROM TB_WTM_IS_BS_SUMM
+		</selectKey>
+
+    	INSERT /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.insertSummarizeResult */
+    	INTO   TB_WTM_IS_BS_SUMM (SUMM_ID, CALL_ID, RESULT_CD, SUMM_STRING)
+    	VALUES ( #{summId}
+			   , #{applicationId}
+			   , #{resultCd}
+			   , #{summString}
+    		   )
+    </insert>
+	
+	<!-- 콜단위 감성분석 결과 업데이트 -->
+    <update id="updateSentimentCallResult" parameterType="hashMap">
+    	UPDATE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.updateSentimentCallResult */
+    		   TB_WTM_IS_SESS
+    	SET	   SENT_CLS_CD = #{sentClsCd}
+    	<if test='sentPt != null and sentPt !=""'>
+		     , SENT_CLS_PT = #{sentPt}
+		</if>
+    	WHERE  CALL_ID = #{applicationId}
+    </update>	
+    
+    <!-- 유형분석 삭제 -->
+    <delete id="deleteClassifireResult" parameterType="kr.co.wisenut.textminer.batch.vo.SttContentsVo">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteClassifireResult */
+    	FROM   TB_WTM_IS_BS_CLASS
+    	WHERE  CALL_ID = #{applicationId}
+    </delete>
+    
+    <!-- 감성분석 삭제 -->
+    <delete id="deleteSentimentResult" parameterType="kr.co.wisenut.textminer.batch.vo.SttContentsVo">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteSentimentResult */
+    	FROM   TB_WTM_IS_BS_SENT
+    	WHERE  CALL_ID = #{applicationId}
+    </delete>
+    
+    <!-- 키워드추출 삭제 -->
+    <delete id="deleteKeywordExtractionResult" parameterType="kr.co.wisenut.textminer.batch.vo.SttContentsVo">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteKeywordExtractionResult */
+    	FROM   TB_WTM_IS_BS_KEYWORD
+    	WHERE  CALL_ID = #{applicationId}
+    </delete>
+    
+    <!-- 연관어추출 삭제 -->
+    <delete id="deleteRelatedKeywordExtractionResult" parameterType="kr.co.wisenut.textminer.batch.vo.SttContentsVo">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteRelatedKeywordExtractionResult */
+    	FROM   TB_WTM_IS_BS_RELWORD
+    	WHERE  CALL_ID = #{applicationId}
+    </delete>
+    
+    <!-- 문서요약 삭제 -->
+    <delete id="deleteSummarizeResult" parameterType="kr.co.wisenut.textminer.batch.vo.SttContentsVo">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteSummarizeResult */
+    	FROM   TB_WTM_IS_BS_SUMM
+    	WHERE  CALL_ID = #{applicationId}
+    </delete>
+    
+    <!-- 2년 지난 로그삭제 -->
+    <delete id="deleteLog">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteLog */
+    	FROM   WISETM_ACTION_HISTORY
+    	WHERE  TO_CHAR(ACTION_DT, 'YYYYMMDD') <![CDATA[<=]]> TO_CHAR(CURRENT_TIMESTAMP + INTERVAL '-2' YEAR, 'YYYYMMDD')
+    </delete>
+    
+    <!-- 5년 지난 분석결과 데이터 삭제 -->
+    <delete id="deleteAnalyzeData">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteAnalyzeData */
+    	FROM   WISETM_ANALYZE_RESULT
+    	WHERE  TO_CHAR(CRE_DT, 'YYYYMMDD') <![CDATA[<=]]> TO_CHAR(CURRENT_TIMESTAMP + INTERVAL '-5' YEAR, 'YYYYMMDD')
+    </delete>
+    
+    <!-- 5년 지난 유형분류 통계 데이터 삭제 -->
+    <delete id="deleteStatClassData">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteStatClassData */
+		FROM   TB_WTM_STAT_CLASS
+		WHERE  YEAR * 10000 + MONTH * 100 + DAY <![CDATA[<=]]> TO_CHAR(CURRENT_TIMESTAMP + INTERVAL '-5' YEAR, 'YYYYMMDD')
+    </delete>
+    
+    <!-- 5년 지난 감성분석 통계 데이터 삭제 -->
+    <delete id="deleteStatSentimentData">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteStatSentimentData */
+		FROM   TB_WTM_STAT_SENTIMENT
+		WHERE  YEAR * 10000 + MONTH * 100 + DAY <![CDATA[<=]]> TO_CHAR(CURRENT_TIMESTAMP + INTERVAL '-5' YEAR, 'YYYYMMDD')
+    </delete>
+    
+    <!-- 5년 지난 키워드 통계 데이터 삭제 -->
+    <delete id="deleteStatKeywordData">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteStatKeywordData */
+		FROM   TB_WTM_STAT_KEYWORD
+		WHERE  YEAR * 10000 + MONTH * 100 + DAY <![CDATA[<=]]> TO_CHAR(CURRENT_TIMESTAMP + INTERVAL '-5' YEAR, 'YYYYMMDD')
+    </delete>
+    
+    <!-- 5년 지난 금칙어 통계 데이터 삭제 -->
+    <delete id="deleteStatStopWordData">
+    	DELETE /* kr.co.wisenut.textminer.batch.mapper.BatchMapper.deleteStatStopWordData */
+		FROM   TB_WTM_STAT_STOPWORD
+		WHERE  YEAR * 10000 + MONTH * 100 + DAY <![CDATA[<=]]> TO_CHAR(CURRENT_TIMESTAMP + INTERVAL '-5' YEAR, 'YYYYMMDD')
+    </delete>
+</mapper>

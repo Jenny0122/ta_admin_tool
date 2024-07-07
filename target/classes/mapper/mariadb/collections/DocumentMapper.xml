@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.collection.mapper.DocumentMapper">
+	
+	<!-- 컬렉션 문서 조회 -->
+	<select id="getDocumentList" parameterType="hashmap" resultType="hashmap">
+		SELECT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.getDocumentList */
+			   *
+		FROM   <include refid="selectTable"></include>
+	</select>
+	
+	<!-- 컬렉션 문서 건수 조회 -->
+	<select id="getDocumentListCount" parameterType="hashmap" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.getDocumentListCount */
+			   COUNT(*)
+		FROM   <include refid="selectTable"></include>
+	</select>
+	
+	<!-- 컬렉션 문서 조회(파일생성용) -->
+	<select id="getDocumentListForFile" parameterType="hashmap" resultType="hashmap">
+		SELECT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.getDocumentListForFile */
+			   DOCUMENT_CONTENT AS documentContent
+		FROM   WISETM_DOCUMENTS
+		WHERE  COLLECTION_ID = #{collectionId}
+	</select>
+	
+	<!-- 컬렉션 문서 상세조회 -->
+	<select id="getDocumentDetail" parameterType="hashmap" resultType="hashmap">
+		SELECT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.getDocumentDetail */
+			   *
+		FROM  <include refid="selectTable"></include>
+		WHERE  docid = #{docId} 
+	</select>
+	
+	<!-- 컬렉션 문서 등록(파일 업로드) -->
+	<insert id="insertDocument" parameterType="hashmap">
+		<selectKey resultType="int" keyProperty="documentId" order="BEFORE">
+			SELECT COALESCE(MAX(DOCUMENT_ID), 0) + 1
+			FROM   WISETM_DOCUMENTS
+			WHERE  COLLECTION_ID = #{collectionId}
+		</selectKey>
+		
+		INSERT /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.insertDocument */
+		INTO   WISETM_DOCUMENTS
+		VALUES ( #{documentId}
+			   , #{collectionId}
+			   , #{documentContent}
+			   )
+	</insert>
+	
+	<!-- 컬렉션 문서 변경 -->
+	<update id="updateDocument" parameterType="hashmap">
+		UPDATE /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.updateDocument */
+			   WISETM_DOCUMENTS
+		SET    DOCUMENT_CONTENT = #{documentContent}
+		WHERE  DOCUMENT_ID = ( SELECT DOCUMENT_ID 
+							   FROM   WISETM_DOCUMENTS 
+							   WHERE  JSON_VALUE(DOCUMENT_CONTENT, '$.docid') = #{docId}
+							     AND  COLLECTION_ID = #{collectionId})
+		  AND  COLLECTION_ID = #{collectionId}
+	</update>
+	
+	<!-- 컬렉션 문서 삭제(컬렉션 삭제 시 호출) -->
+	<delete id="deleteDocument" parameterType="int">
+		DELETE /* kr.co.wisenut.textminer.collection.mapper.DocumentMapper.deleteDocument */
+		FROM   WISETM_DOCUMENTS
+		WHERE  COLLECTION_ID = #{collectionId}
+	</delete>
+	
+	<!-- JSON 테이블(조회) -->
+	<sql id="selectTable">
+		JSON_TABLE (
+			( SELECT CONCAT('[',GROUP_CONCAT(DOCUMENT_CONTENT),']') AS DOCUMENT_CONTENT
+			  FROM ( SELECT TMP.*
+						  , CEIL( TMP.SEQ / 10 ) AS PAGE_ROW
+					 FROM ( SELECT (SELECT @ROWNUM := @ROWNUM + 1) AS SEQ
+								 , DOCUMENT_ID
+								 , COLLECTION_ID
+								 , DOCUMENT_CONTENT
+							FROM   WISETM_DOCUMENTS WTD
+							   , ( SELECT @ROWNUM := 0) TMP
+							WHERE  COLLECTION_ID = #{collectionId}
+		<if test='searchPattern != "" and searchPattern != null'>
+							  AND  DOCUMENT_CONTENT LIKE CONCAT('%',#{searchPattern},'%')
+		</if>
+						  ) TMP
+				   ) TOTAL
+			  WHERE  1 = 1
+		<if test='pageRow != null and pageRow != ""'>
+			<if test='queryType=="LIST"'>
+			    AND  PAGE_ROW = #{pageRow}
+			</if>
+		</if>
+			), '$[*]' COLUMNS( ${documentField} )
+		) T
+	</sql>
+</mapper>

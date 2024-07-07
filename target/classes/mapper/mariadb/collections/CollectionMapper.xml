@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.collection.mapper.CollectionMapper">
+
+	<!-- 컬렉션 이름 중복 체크 -->
+	<select id="chkDuplicatedCollectionName" parameterType="kr.co.wisenut.textminer.collection.vo.CollectionVo" resultType="int">
+		SELECT /* kr.co.wisenut.mapper.CollectionMapper.chkDuplicatedCollectionName */
+			   COUNT(*) AS totalCount
+		FROM   WISETM_COLLECTIONS
+		WHERE  COLLECTION_NAME = #{collectionName}
+		<if test='collectionId != 0 and collectionId != null'>
+		  AND  COLLECTION_ID != #{collectionId}
+		</if>
+	</select>
+
+	<!-- 컬렉션 전체 건수 조회 -->
+	<select id="getCollectionTotalCount" parameterType="hashmap" resultType="int">
+		SELECT /* kr.co.wisenut.mapper.CollectionMapper.getCollectionTotalCount */
+			   COUNT(*) AS totalCount
+		FROM  <include refid="selectTable"></include>
+	</select>
+
+	<!-- 컬렉션 목록조회 -->
+	<select id="getCollectionNames" parameterType="hashmap" resultType="kr.co.wisenut.textminer.collection.vo.CollectionVo">
+		SELECT /* kr.co.wisenut.mapper.CollectionMapper.getCollectionNames */
+			   *
+		FROM ( SELECT WTC.COLLECTION_ID AS collectionId
+					, WTC.COLLECTION_NAME AS collectionName
+					, WTC.COLLECTION_TYPE AS collectionType
+					, WTC.COLLECTION_JOB AS collectionJob
+					, WTC.COLLECTION_DESC AS collectionDesc
+					, WTC.COLLECTION_OWNER AS collectionOwner
+					, WTC.FIELD_INFO AS fieldInfo
+					, WTC.ORIGINAL_FIELD_INFO AS originalFieldInfo
+					, WTC.DOCUMENT_FIELD AS documentField
+					, COALESCE(WTD.DOCUMENT_COUNT, 0) AS documentCount
+					, WTC.CRE_DT AS creDt
+					, WTC.CRE_USER AS creUser
+					, WTC.MOD_DT AS modDt
+					, WTC.MOD_USER AS modUser
+			   FROM   WISETM_COLLECTIONS WTC
+			   LEFT OUTER JOIN ( SELECT COLLECTION_ID
+									  , COUNT(*) AS DOCUMENT_COUNT
+								 FROM   WISETM_DOCUMENTS
+								 GROUP BY COLLECTION_ID ) WTD
+							ON WTC.COLLECTION_ID = WTD.COLLECTION_ID) WTC
+		WHERE  1 = 1
+		/*  AND  documentCount > 0 */
+		<if test='role != "[ADMIN]"'>
+		  AND  collectionOwner = #{collectionOwner}
+		</if>
+		<if test='collectionJob != null and collectionJob != ""'>
+		  AND  collectionJob = #{collectionJob}
+		</if>
+		ORDER BY collectionId DESC
+	</select>
+
+	<!-- 컬렉션 리스트 조회 -->
+	<select id="getCollectionList" parameterType="hashmap" resultType="kr.co.wisenut.textminer.collection.vo.CollectionVo">
+		SELECT /* kr.co.wisenut.mapper.CollectionMapper.getCollectionList */
+			   COLLECTION_ID AS collectionId
+			 , COLLECTION_NAME AS collectionName
+			 , COLLECTION_TYPE AS collectionType
+			 , COLLECTION_JOB AS collectionJob
+			 , COLLECTION_DESC AS collectionDesc
+			 , COLLECTION_OWNER AS collectionOwner
+			 , COALESCE(FIELD_INFO, ' ') AS fieldInfo
+			 , COALESCE(ORIGINAL_FIELD_INFO, ' ') AS originalFieldInfo
+			 , COALESCE(DOCUMENT_COUNT, 0) AS documentCount
+			 , CASE WHEN DOCUMENT_COUNT > 0 
+			 		THEN '완료'
+			 		ELSE '-'
+			   END AS uploadStatus
+			 , DATE_FORMAT(CRE_DT, '%Y.%m.%d') AS creDt
+		FROM  <include refid="selectTable"></include>
+		WHERE  1 = 1
+		<if test='pageRow != null and pageRow != ""'>
+		  AND  PAGE_ROW = #{pageRow}
+		</if>
+		<if test='role != "[ADMIN]"'>
+		  AND  COLLECTION_OWNER = #{collectionOwner}
+		</if>
+		<if test='collectionJob != null and collectionJob != ""'>
+		  AND  COLLECTION_JOB = #{collectionJob}
+		</if>
+		<if test='collectionType != null and collectionType != ""'>
+		  AND  COLLECTION_TYPE = #{collectionType}
+		</if>
+	</select>
+
+	<!-- 컬렉션 상세 조회 -->
+	<select id="getCollectionDetail" parameterType="kr.co.wisenut.textminer.collection.vo.CollectionVo" resultType="kr.co.wisenut.textminer.collection.vo.CollectionVo">
+		SELECT /* kr.co.wisenut.mapper.CollectionMapper.getCollectionDetail */
+			   COLLECTION_ID AS collectionId
+			 , COLLECTION_NAME AS collectionName
+			 , COLLECTION_TYPE AS collectionType
+			 , COLLECTION_JOB AS collectionJob
+			 , COLLECTION_DESC AS collectionDesc
+			 , COLLECTION_OWNER AS collectionOwner
+			 , COALESCE(FIELD_INFO, ' ') AS fieldInfo
+			 , COALESCE(ORIGINAL_FIELD_INFO, ' ') AS originalFieldInfo
+			 , COALESCE(DOCUMENT_FIELD, ' ') AS documentField
+			 , COALESCE((SELECT COUNT(*)
+						 FROM   WISETM_DOCUMENTS
+						 WHERE  COLLECTION_ID =  WTC.COLLECTION_ID), 0) AS documentCount
+			 , DATE_FORMAT(CRE_DT, '%Y.%m.%d') AS creDt
+		FROM   WISETM_COLLECTIONS WTC
+		WHERE  COLLECTION_ID = #{collectionId}
+		<if test='role != "[ADMIN]"'>
+		  AND  COLLECTION_OWNER = #{collectionOwner}
+		</if>
+	</select>
+	
+	<!-- 컬렉션 상세 조회(Model 사용) -->
+	<select id="getCollectionDetailUseModel" parameterType="kr.co.wisenut.textminer.model.vo.ModelVo" resultType="kr.co.wisenut.textminer.collection.vo.CollectionVo">
+		SELECT /* kr.co.wisenut.mapper.CollectionMapper.getCollectionDetailUseModel */
+			   COLLECTION_ID AS collectionId
+			 , COLLECTION_NAME AS collectionName
+			 , COLLECTION_TYPE AS collectionType
+			 , COLLECTION_JOB AS collectionJob
+			 , COLLECTION_DESC AS collectionDesc
+			 , COLLECTION_OWNER AS collectionOwner
+			 , COALESCE(FIELD_INFO, ' ') AS fieldInfo
+			 , COALESCE(ORIGINAL_FIELD_INFO, ' ') AS originalFieldInfo
+			 , COALESCE(DOCUMENT_FIELD, ' ') AS documentField
+			 , COALESCE((SELECT COUNT(*)
+						 FROM   WISETM_DOCUMENTS
+						 WHERE  COLLECTION_ID =  WTC.COLLECTION_ID), 0) AS documentCount
+			 , DATE_FORMAT(CRE_DT, '%Y.%m.%d') AS creDt
+		FROM   WISETM_COLLECTIONS WTC
+		WHERE  COLLECTION_ID = (SELECT COLLECTION_ID 
+								FROM   WISETM_TASK 
+								WHERE  TASK_ID = #{taskId} 
+								  AND  PROJECT_ID = #{projectId})
+		<if test='role != "[ADMIN]"'>
+		  AND  COLLECTION_OWNER = #{collectionOwner}
+		</if>
+	</select>
+
+	<!-- 컬렉션 등록 -->
+	<insert id="insertCollection" parameterType="kr.co.wisenut.textminer.collection.vo.CollectionVo">
+		<selectKey resultType="int" keyProperty="collectionId" order="BEFORE">
+			SELECT COALESCE(MAX(COLLECTION_ID),0) + 1 FROM WISETM_COLLECTIONS
+		</selectKey>
+		
+		INSERT /* kr.co.wisenut.textminer.collection.mapper.CollectionMapper.insertCollection */
+		INTO   WISETM_COLLECTIONS (COLLECTION_ID, COLLECTION_NAME, COLLECTION_TYPE, COLLECTION_JOB, COLLECTION_DESC, COLLECTION_OWNER, CRE_DT, CRE_USER, MOD_DT, MOD_USER)
+		VALUES ( #{collectionId}
+			   , #{collectionName}
+			   , #{collectionType}
+			   , #{collectionJob}
+			   , #{collectionDesc}
+			   , #{collectionOwner}
+			   , CURRENT_TIMESTAMP
+			   , #{creUser}
+			   , CURRENT_TIMESTAMP
+			   , #{modUser}
+			   ) 
+	</insert>
+	
+	<!-- 컬렉션 수정 -->
+	<update id="updateCollection" parameterType="kr.co.wisenut.textminer.collection.vo.CollectionVo">
+		UPDATE /* kr.co.wisenut.textminer.collection.mapper.CollectionMapper.updateCollection */
+			   WISETM_COLLECTIONS
+		SET    MOD_DT = CURRENT_TIMESTAMP
+			 , MOD_USER = #{modUser}
+		<if test='collectionName != null and collectionName != ""'>, COLLECTION_NAME = #{collectionName}</if>
+		<if test='collectionType != null and collectionType != ""'>, COLLECTION_TYPE = #{collectionType}</if>
+		<if test='collectionJob != null and collectionJob != ""'>, COLLECTION_JOB = #{collectionJob}</if>
+		<if test='collectionDesc != null and collectionDesc != ""'>, COLLECTION_DESC = #{collectionDesc}</if>
+		<if test='fieldInfo != null and fieldInfo != ""'>, FIELD_INFO = #{fieldInfo}</if>
+		<if test='originalFieldInfo != null and originalFieldInfo != ""'>, ORIGINAL_FIELD_INFO = #{originalFieldInfo}</if>
+		<if test='documentField != null and documentField != ""'>, DOCUMENT_FIELD = #{documentField}</if>
+		<if test='documentList != null and documentList != ""'>, DOCUMENT_LIST = #{documentList}</if>
+		<if test='documentCount != null and documentCount != ""'>, DOCUMENT_COUNT = #{documentCount}</if>
+		WHERE  COLLECTION_ID = #{collectionId}
+		<if test='role != "[ADMIN]"'>
+		  AND  COLLECTION_OWNER = #{collectionOwner}
+		</if>
+	</update>
+	
+	<!-- 컬렉션 삭제 -->
+	<delete id="deleteCollection" parameterType="kr.co.wisenut.textminer.collection.vo.CollectionVo">
+		DELETE /* kr.co.wisenut.textminer.collection.mapper.CollectionMapper.deleteCollection */
+		FROM   WISETM_COLLECTIONS
+		WHERE  COLLECTION_ID = #{collectionId}
+		<if test='role != "[ADMIN]"'>
+		  AND  COLLECTION_OWNER = #{collectionOwner}
+		</if>
+	</delete>
+
+	<!-- 테이블 -->
+	<sql id="selectTable">
+	  ( SELECT TMP.*
+			 , CEIL( TMP.SEQ / #{pageSize} ) AS PAGE_ROW
+		FROM  (
+				SELECT (@ROWNUM := @ROWNUM + 1) AS SEQ
+					 , WTC.COLLECTION_ID
+					 , WTC.COLLECTION_NAME
+					 , WTC.COLLECTION_TYPE
+					 , WTC.COLLECTION_JOB
+					 , WTC.COLLECTION_DESC
+					 , WTC.COLLECTION_OWNER
+					 , WTC.FIELD_INFO
+					 , WTC.ORIGINAL_FIELD_INFO
+					 , WTC.DOCUMENT_FIELD
+					 , COALESCE(WTD.DOCUMENT_COUNT, 0) AS DOCUMENT_COUNT
+					 , WTC.CRE_DT
+					 , WTC.CRE_USER
+					 , WTC.MOD_DT
+					 , WTC.MOD_USER
+				FROM   WISETM_COLLECTIONS WTC
+				LEFT OUTER JOIN ( SELECT COLLECTION_ID
+									   , COUNT(*) AS DOCUMENT_COUNT
+								  FROM   WISETM_DOCUMENTS
+								  GROUP BY COLLECTION_ID ) WTD
+							 ON WTC.COLLECTION_ID = WTD.COLLECTION_ID
+					 , (SELECT @ROWNUM := 0) TMP
+				ORDER BY WTC.COLLECTION_ID DESC
+			  ) TMP
+	  ) TOTAL
+	</sql>
+</mapper>

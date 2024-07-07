@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.resource.mapper.ResourceMapper">
+    
+    <!-- 프로젝트 현황 조회 -->
+    <select id="getProjectStatus" resultType="hashmap">
+		SELECT /* kr.co.wisenut.textminer.resource.mapper.ResourceMapper.getProjectStatus */
+			   MAX(CNT1) AS projectCnt
+			 , MAX(CNT2) AS serviceCnt
+			 , MAX(CNT3) AS collectionCnt
+			 , MAX(CNT4) AS dictionaryCnt
+		FROM  ( SELECT COUNT(*) AS CNT1
+					 , 0 AS CNT2
+					 , 0 AS CNT3
+					 , 0 AS CNT4
+				FROM   WISETM_PROJECTS
+				UNION ALL
+				SELECT 0 AS CNT1
+					 , COUNT(*) AS CNT2
+					 , 0 AS CNT3
+					 , 0 AS CNT4
+				FROM   WISETM_TASK
+				UNION ALL
+				SELECT 0 AS CNT1
+					 , 0 AS CNT2
+					 , COUNT(*) AS CNT3
+					 , 0 AS CNT4
+				FROM   WISETM_COLLECTIONS
+				UNION ALL
+				SELECT 0 AS CNT1
+					 , 0 AS CNT2
+					 , 0 AS CNT3
+					 , COUNT(*) AS CNT4
+				FROM   WISETM_DICTIONARIES 
+			  ) TMP
+    </select>
+</mapper>

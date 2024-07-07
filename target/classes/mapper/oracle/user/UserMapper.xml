@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.user.mapper.UserMapper">
+
+	<!-- SSO ID check -->
+    <select id="getSsoUserInfo" parameterType="string" resultType="hashmap">
+		SELECT /* kr.co.wisenut.textminer.user.mapper.UserMapper.getSsoUserInfo */
+			   USERID AS "userId"				/* SSO ID = 사용자 ID */
+			 , USR_NM AS "userName"				/* 사용자명 */
+			 , EML_ADR AS "userEmail"			/* 이메일 */
+			 , HLFC_DSCD AS "hlfcDscd"			/* 재직구분코드 (1:재직, 2:휴직, 3:퇴직) */
+			 , BLNT_BRNO AS "blntBrno"			/* 소속점번호 */	 
+		FROM   TMUSER.TM_SSO_USR_INF
+		WHERE  USERID = #{userId}
+		  AND  HLFC_DSCD = 1					/* 재직인 계정만 등록가능 */
+    </select>
+	
+	<!-- 로그인 (사용자 정보 조회) -->
+    <select id="getUserInfo" parameterType="string" resultType="kr.co.wisenut.textminer.user.vo.UserVo">
+		SELECT /* kr.co.wisenut.textminer.user.mapper.UserMapper.getUserInfo */
+			   USER_ID AS "userId"
+			 , USER_PW AS "userPw"
+			 , USER_NAME AS "userName"
+			 , USER_EMAIL AS "userEmail"
+			 , USER_AUTH AS "userAuth"
+			 , USE_YN AS "useYn"
+		FROM   WISETM_USER_INFO
+		WHERE  USER_ID = #{userId}
+    </select>
+    
+	<!-- ID 중복검사 -->
+    <select id="checkDupUserId" parameterType="kr.co.wisenut.textminer.user.vo.UserVo" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.user.mapper.UserMapper.checkDupUserId */
+			   COUNT(*)
+		FROM   WISETM_USER_INFO
+		WHERE  USER_ID = #{userId}
+    </select>
+    
+    <!-- 로그인 (사용자 정보 조회) -->
+    <select id="getUserList" resultType="kr.co.wisenut.textminer.user.vo.UserVo">
+		SELECT /* kr.co.wisenut.textminer.user.mapper.UserMapper.getUserList */
+			   USER_ID AS "userId"
+			 , USER_PW AS "userPw"
+			 , USER_NAME AS "userName"
+			 , USER_EMAIL AS "userEmail"
+			 , USER_AUTH AS "userAuth"
+			 , USE_YN AS "useYn"
+			 , TO_CHAR(CRE_DT, 'YYYY-MM-DD HH24:MI:SS') AS "creDt"
+			 , CRE_USER AS "creUser"
+			 , TO_CHAR(MOD_DT, 'YYYY-MM-DD HH24:MI:SS') AS "modDt"
+			 , MOD_USER AS "modUser"
+		FROM   WISETM_USER_INFO
+    </select>
+    
+    <!-- 회원가입 및 사용자 추가 -->
+    <insert id="insertUserInfo" parameterType="kr.co.wisenut.textminer.user.vo.UserVo">
+    	INSERT /* kr.co.wisenut.textminer.user.mapper.UserMapper.insertUserInfo */
+    	INTO   WISETM_USER_INFO (USER_ID, USER_PW, USER_NAME, USER_EMAIL, USER_AUTH, USE_YN, CRE_DT, CRE_USER, MOD_DT, MOD_USER, BLNT_BRNO, HLFC_DSCD, ACTIVE_YN)
+    	VALUES (
+    		     #{userId}
+    		   , #{userPw}
+    		   , #{userName}
+    		   , #{userEmail}
+    		   , COALESCE(#{userAuth, jdbcType=VARCHAR}, 'USER')
+    		   , 'Y'
+    		   , CURRENT_TIMESTAMP
+    		   , COALESCE(#{creUser}, 'SYSTEM')
+    		   , CURRENT_TIMESTAMP
+    		   , COALESCE(#{creUser}, 'SYSTEM')
+    		   , COALESCE(#{blntBrno, jdbcType=VARCHAR}, NULL)
+    		   , #{hlfcDscd}
+    		   , 'Y'
+    		   ) 
+    </insert>
+    
+    <!-- 사용자 정보변경 -->
+    <update id="updateUserInfo" parameterType="kr.co.wisenut.textminer.user.vo.UserVo">
+    	UPDATE /* kr.co.wisenut.textminer.user.mapper.UserMapper.updateUserInfo */
+    		   WISETM_USER_INFO
+    	SET    MOD_DT = CURRENT_TIMESTAMP
+    		 , MOD_USER = #{modUser} 
+		 <if test='userPw != "" and userPw != null'>, USER_PW = #{userPw}</if>
+		 <if test='userName != "" and userName != null'>, USER_NAME = #{userName}</if>
+		 <if test='userEmail != "" and userEmail != null'>, USER_EMAIL = #{userEmail}</if>
+		 <if test='userAuth != "" and userAuth != null'>, USER_AUTH = #{userAuth}</if>
+    	WHERE  USER_ID = #{userId}
+    </update>
+    
+    <!-- 사용자 활성화/비활성화 처리 -->
+    <update id="updateUserEnabled" parameterType="hashmap">
+    	UPDATE /* kr.co.wisenut.textminer.user.mapper.UserMapper.updateUserInfo */
+    		   WISETM_USER_INFO
+    	SET    MOD_DT = CURRENT_TIMESTAMP
+    		 , MOD_USER = #{modUser} 
+		 <if test='useYn != "" and useYn != null'>, USE_YN = #{useYn}</if>
+    	WHERE  USER_ID = #{userId}
+    </update>
+    
+    <!-- 사용자 삭제 -->
+    <delete id="deleteUserInfo" parameterType="kr.co.wisenut.textminer.user.vo.UserVo">
+    	DELETE /* kr.co.wisenut.textminer.user.mapper.UserMapper.deleteUserInfo */
+    	FROM   WISETM_USER_INFO
+    	WHERE  USER_ID = #{userId}
+    </delete>
+    
+</mapper>

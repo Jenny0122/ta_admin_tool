@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.history.mapper.ActionHistoryMapper">
+	
+	<!-- 활동이력 전체건수 조회 -->
+	<select id="getActionHistoryCnt" parameterType="hashmap" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.history.mapper.ActionHistoryMapper.getActionHistoryCnt */
+			   COUNT(*)
+		FROM   <include refid="selectTable"></include>
+	</select>
+	
+	<!-- 활동이력 조회 -->
+	<select id="getActionHistoryList" parameterType="hashmap" resultType="kr.co.wisenut.textminer.history.vo.ActionHistoryVo">
+		SELECT /* kr.co.wisenut.textminer.history.mapper.ActionHistoryMapper.getActionHistoryList */
+			   actionDt AS actionId
+			 , CASE WHEN TRUNC((TO_DATE(TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')
+	 				   - TO_DATE(TO_CHAR(actionDt, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')) * 24 * 60) <![CDATA[<]]> 60
+			   		THEN TRUNC((TO_DATE(TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')
+	 				   - TO_DATE(TO_CHAR(actionDt, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')) * 24 * 60) || '분 전'
+			   		WHEN TRUNC((TO_DATE(TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')
+	 				   - TO_DATE(TO_CHAR(actionDt, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')) * 24) <![CDATA[<]]> 24
+			   		THEN TRUNC((TO_DATE(TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')
+	 				   - TO_DATE(TO_CHAR(actionDt, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')) * 24) || '시간 전'
+			   		ELSE TO_CHAR(actionDt, 'YYYY.MM.DD HH24:MI:DD')
+			   END AS "actionDt"
+			 , actionType
+			 , actionMsg
+		FROM ( SELECT TMP.*
+					, ROWNUM AS seq
+					, CEIL( ROWNUM / #{pageSize} ) AS pageRow
+			   FROM   <include refid="selectTable"></include>
+			 ) T
+		WHERE  pageRow = #{pageRow}
+		ORDER BY actionId DESC
+	</select>
+	
+	<!-- 활동이력 저장 -->
+	<insert id="insertActionHistory" parameterType="kr.co.wisenut.textminer.history.vo.ActionHistoryVo">
+		INSERT /* kr.co.wisenut.textminer.history.mapper.ActionHistoryMapper.insertActionHistory */
+		INTO   WISETM_ACTION_HISTORY (ACTION_DT, ACTION_TYPE, RESOURCE_ID, RESOURCE_TYPE, ACTION_MSG, ACTION_USER
+		<if test='userIp != null and userIp !=""'>
+			 , USER_IP
+		</if>
+			   )
+		VALUES ( CURRENT_TIMESTAMP
+			   , #{actionType}
+			   , #{resourceId}
+			   , #{resourceType}
+			   , #{actionMsg}
+			   , #{actionUser}
+		<if test='userIp != null and userIp !=""'>
+			   , #{userIp}
+		</if>
+			   )
+	</insert>
+	
+	<!-- JSON 테이블(조회) -->
+	<sql id="selectTable">
+		( SELECT ACTION_DT AS actionDt
+			   , ACTION_TYPE AS actionType
+			   , RESOURCE_ID AS resourceId
+			   , RESOURCE_TYPE AS resourceType
+			   , REPLACE(ACTION_MSG, '\n', ' ') AS actionMsg
+			   , ACTION_USER AS actionUser
+		  FROM   WISETM_ACTION_HISTORY
+		  WHERE  1 = 1
+		<if test='logDiv == "U"'>
+		    AND  ACTION_TYPE != 'SYSTEM_BATCH'
+		</if>
+		<if test='logDiv == "B"'>
+		    AND  ACTION_TYPE = 'SYSTEM_BATCH'
+		</if>
+		<if test='role != "[ADMIN]"'>
+			AND  ACTION_USER = #{actionUser}
+		</if>
+		  ORDER BY ACTION_DT DESC
+		) TMP
+	</sql>
+</mapper>

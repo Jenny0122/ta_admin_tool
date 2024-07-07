@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.batch.mapper.SttContentsMapper">
+	
+	<!-- STT 변환상태 조회 -->
+    <select id="chkSttStatus" parameterType="String" resultType="String">
+		SELECT /* kr.co.wisenut.TA_API.restif.mapper.GetSttContentsMapper.chkSttStatus */
+			CALL_STATUS as "sttStatus"
+		FROM 
+		    RECORDS_STT_STATUS 
+		WHERE 
+		    APPLICATION_ID = #{value}
+    </select>
+    
+    <!-- STT 테이블에서 텍스트 수집 -->
+    <select id="getSttContents" parameterType="String" resultType="HashMap">
+		SELECT /* kr.co.wisenut.TA_API.restif.mapper.GetSttContentsMapper.getSttContents */
+			  SPEAKER_TYPE as "speakerType"
+		    , STT_RESULTS as "sttResult"
+		    , START_SEQ as "startSeq"
+		    , END_SEQ as "endSeq"
+		    , INOUT_SC_CD as "isAnaClass"
+		FROM 
+		    RECORDS_STT stt
+		    LEFT JOIN TB_WTM_IS_SESS s ON stt.APPLICATION_ID = s.CALL_ID
+		WHERE 
+		    APPLICATION_ID = #{value}
+		ORDER BY 
+    		START_SEQ
+    </select>
+    
+    <!-- STT 재수집 TA 재분석 대상 CallId 조회 -->
+    <select id="getSttReprocessCallId" resultType="String">
+		<![CDATA[ 
+		SELECT /* kr.co.wisenut.TA_API.restif.mapper.GetSttContentsMapper.getSttReprocessCallId */
+			CALL_ID
+		FROM 
+		    TB_WTM_IS_SESS
+		WHERE ANA_STATUS = '400100'	
+			AND CALL_END_DT >= (CURRENT_TIMESTAMP - 1)
+		]]>
+    </select>
+    
+    <!-- STT 수집 실패 - 세션 업데이트 -->
+    <update id="updateSttFailed" parameterType="String">
+		UPDATE /* kr.co.wisenut.TA_API.restif.mapper.GetSttContentsMapper.updateSttFailed */
+    			TB_WTM_IS_SESS
+		SET	   ANA_STATUS = '400100'
+		WHERE  CALL_ID = #{value}
+    </update>
+    
+    
+</mapper>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.project.mapper.ProjectMapper">
+    
+    <!-- 프로젝트 전체건수 -->
+    <select id="getProjectTotalCount" parameterType="kr.co.wisenut.textminer.project.vo.ProjectVo" resultType="int">
+		SELECT /* kr.co.wisenut.textminer.project.mapper.ProjectMapper.getProjectTotalCount */
+			   COUNT(*)
+		FROM   WISETM_PROJECTS
+		WHERE  1 = 1
+		<if test='projectId != "0" and projectId !="" and projectId != null'>
+		  AND  PROJECT_ID = #{projectId}
+		</if>		
+		<if test='role != "[ADMIN]"'>
+		  AND  PROJECT_OWNER = #{projectOwner}
+		</if>
+    </select>
+    
+    <!-- 프로젝트 조회(SelectBox) -->
+    <select id="getProjectListForSelectBox" parameterType="kr.co.wisenut.textminer.project.vo.ProjectVo" resultType="hashMap">
+		SELECT /* kr.co.wisenut.textminer.project.mapper.ProjectMapper.getProjectListForSelectBox */
+			   WTP.PROJECT_ID AS "projectId"
+			 , PROJECT_NAME AS "projectName"
+			 , PROJECT_DESC AS "projectDesc"
+			 , TO_CHAR(CRE_DT, 'YYYY.MM.DD') AS "creDt"
+		FROM   WISETM_PROJECTS WTP
+		<if test='simulationYn == "Y"'>
+		/* 시뮬레이션에서는 등록된 테스크가 존재하는 프로젝트만 나오도록 수정 */
+		INNER JOIN ( SELECT PROJECT_ID, COUNT(*)
+					 FROM   WISETM_TASK
+					 GROUP BY PROJECT_ID ) WTT
+				ON WTP.PROJECT_ID = WTT.PROJECT_ID
+		</if>
+		WHERE  1 = 1
+		<if test='projectId != null and projectId != 0'>
+		  AND  WTP.PROJECT_ID = #{projectId} 
+		</if>
+		<if test='role != "[ADMIN]"'>
+		  AND  WTP.PROJECT_OWNER = #{projectOwner}
+		</if>
+    </select>
+    
+    <!-- 프로젝트 조회 -->
+    <select id="getProjectList" parameterType="kr.co.wisenut.textminer.project.vo.ProjectVo" resultType="hashMap">
+		SELECT /* kr.co.wisenut.textminer.project.mapper.ProjectMapper.getProjectList */
+			   WTP.PROJECT_ID AS "projectId"
+			 , WTP.PROJECT_NAME AS "projectName"
+			 , WTP.PROJECT_DESC AS "projectDesc"
+			 , COALESCE(TOT.taskCnt, 0) "taskCnt"
+		FROM   WISETM_PROJECTS WTP
+		LEFT OUTER JOIN (SELECT PROJECT_ID
+							  , SUM(CASE WHEN taskTypeCnt > 3 
+							  			 THEN 3 
+							  			 ELSE taskTypeCnt 
+							  		END) AS taskCnt
+						 FROM ( SELECT PROJECT_ID
+								     , TASK_TYPE
+								     , COUNT(*) AS taskTypeCnt
+							    FROM   WISETM_TASK
+							    GROUP BY PROJECT_ID, TASK_TYPE ) t
+						 GROUP BY PROJECT_ID ) TOT
+					 ON WTP.PROJECT_ID	= TOT.PROJECT_ID 
+		WHERE  1 = 1
+		<if test='projectId != "0" and projectId !="" and projectId != null'>
+		  AND  WTP.PROJECT_ID = #{projectId}
+		</if>		
+		<if test='role != "[ADMIN]"'>
+		  AND  WTP.PROJECT_OWNER = #{projectOwner}
+		</if>		  
+		ORDER BY "projectId"
+    </select>
+    
+    <!-- 프로젝트 상세조회 -->
+    <select id="getProjectDetail" parameterType="kr.co.wisenut.textminer.project.vo.ProjectVo" resultType="kr.co.wisenut.textminer.project.vo.ProjectVo">
+		SELECT /* kr.co.wisenut.textminer.project.mapper.ProjectMapper.getProjectDetail */
+			   PROJECT_ID AS "projectId"
+			 , PROJECT_NAME AS "projectName"
+			 , PROJECT_DESC AS "projectDesc"
+			 , PROJECT_OWNER AS "projectOwner"
+			 , TO_CHAR(CRE_DT, 'YYYY.MM.DD HH24:MI:SS') AS "creDt"
+			 , CRE_USER AS "creUser"
+			 , TO_CHAR(MOD_DT, 'YYYY.MM.DD HH24:MI:SS') AS "modDt"
+			 , MOD_USER AS "creUser"
+		FROM   WISETM_PROJECTS
+		WHERE  1 = 1
+		<if test='projectId != null and projectId != 0'>
+		  AND  PROJECT_ID = #{projectId} 
+		</if>
+		<if test='role != "[ADMIN]"'>
+		  AND  PROJECT_OWNER = #{projectOwner}
+		</if>
+    </select>
+    
+    <!-- 프로젝트 등록 -->
+    <insert id="insertProject" parameterType="kr.co.wisenut.textminer.project.vo.ProjectVo">
+		<selectKey resultType="int" keyProperty="projectId" order="BEFORE">
+			SELECT COALESCE(MAX(PROJECT_ID),0) + 1 FROM WISETM_PROJECTS
+		</selectKey>
+    
+    	INSERT /* kr.co.wisenut.textminer.project.mapper.ProjectMapper.insertProject */
+    	INTO   WISETM_PROJECTS (PROJECT_ID, PROJECT_NAME, PROJECT_DESC, PROJECT_OWNER, CRE_DT, CRE_USER, MOD_DT, MOD_USER)
+    	VALUES ( #{projectId}
+    		   , #{projectName}
+    		   , #{projectDesc}
+    		   , #{projectOwner}
+    		   , CURRENT_TIMESTAMP
+    		   , #{creUser}
+    		   , CURRENT_TIMESTAMP
+    		   , #{modUser}
+    		   )
+    </insert>
+    
+    <!-- 프로젝트 정보변경 -->
+    <update id="updateProject" parameterType="kr.co.wisenut.textminer.project.vo.ProjectVo">
+    	UPDATE /* kr.co.wisenut.textminer.project.mapper.ProjectMapper.updateProject */
+    		   WISETM_PROJECTS
+    	SET	   MOD_DT = CURRENT_TIMESTAMP
+    		 , MOD_USER = #{modUser}
+		<if test='projectName != null and projectName !=""'>
+			 , PROJECT_NAME = #{projectName}
+		</if>
+		<if test='projectDesc != null and projectDesc !=""'>
+			 , PROJECT_DESC = #{projectDesc}
+		</if>
+    	WHERE  PROJECT_ID = #{projectId}
+    </update>
+    
+    <!-- 프로젝트 삭제 -->
+    <delete id="deleteProject" parameterType="kr.co.wisenut.textminer.project.vo.ProjectVo">
+    	DELETE /* kr.co.wisenut.textminer.project.mapper.ProjectMapper.deleteProject */
+    	FROM   WISETM_PROJECTS
+    	WHERE  PROJECT_ID = #{projectId}
+    </delete>
+</mapper>

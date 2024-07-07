@@ -1,0 +1,26 @@
+<!--/* Thymeleaf layout template. head, header, content, footer 여기서 조합 */-->
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">TA 관리도구</title>
+    <!-- 공통 css, js, meta tag -->
+    <th:block th:replace="fragments/head"></th:block>
+</head>
+<body>
+<header th:replace="fragments/header">
+    <h1>공통 헤더. 네비바가 들어갈 영역</h1>
+</header>
+<section layout:fragment="content">
+    <p>Page content goes here</p>
+</section>
+
+<footer th:replace="fragments/footer :: footer">
+    <p layout:fragment="custom-footer">커스텀 푸터</p>
+</footer>
+
+<!--공통 js-->
+
+<!--커스텀 js-->
+
+</body>
+</html>

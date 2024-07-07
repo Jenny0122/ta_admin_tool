@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, text/html;"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible"/>
+
+    <th:block th:replace="fragments/head"></th:block>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/login.css}">
+    <title>로그인</title>
+</head>
+<body>
+
+<div th:if="${param.registered}">
+    new user registered.
+</div>
+
+<div th:if="${param.error}" id="login-error" style="display: none" th:text="${session['SPRING_SECURITY_LAST_EXCEPTION'].message}">
+    Wrong id, password.
+</div>
+
+<div th:if="${param.logout}">
+    You have been logged out.
+</div>
+
+<!--
+<div th:if="${mongoConnectionFailed}" id="db-conn-error" style="display: none">
+    MongoDB Connection Failed.
+</div>
+-->
+
+<div class="wrap">
+    <form id="login_form" th:action="@{/login}" method="post">
+        <div class="login_box">
+            <!-- <h1><img th:src="@{/img/textminer_su.png}" width="250", height=auto></h1> -->
+            <ul class="login mt5">
+            	<li align="center" style="background:none;border:none;" class="mb25">
+					<span style="font-weight:800;color:#191d69;font-size:35pt;letter-spacing:-2.5px;">WISE</span>
+					<span style="font-weight:800;color:#f5a100;font-size:35pt;letter-spacing:-2.5px;">TextAnalyzer</span>
+            	</li>
+                <li><i class="fas fa-user-circle"></i><input type="text" name="userId" required="required" placeholder="아이디" autofocus="autofocus"/></li>
+                <li><i class="fas fa-lock" aria-hidden="true"></i><input type="password" name="userPw" required="required" placeholder="비밀번호" autocomplete="off"/></li>
+            </ul>
+            <button id="btn-login" type="submit" style="display: none">로그인</button>
+            <a href="#" class="login on" onclick="javascript:document.getElementById('btn-login').click();">로그인</a>
+            <!--
+            <p><div class="cont_area mt40"><center>계정이 없으신가요?</center></div></p>
+            <a href="/register" class="join on">회원가입</a>
+			-->
+        </div>
+    </form>
+</div>
+</body>
+<script type="text/javascript" th:inline="javascript">
+    /*<![CDATA[*/
+
+    if (/*[[ ${param.error} ]]*/) {
+        console.error(/*[[ ${param} ]]*/);
+        console.error(/*[[ ${param.error} ]]*/);
+    }
+    /*]]>*/
+</script>
+<script type="application/javascript">
+    if (document.getElementById("db-conn-error")) {
+        console.debug(document.getElementById("db-conn-error").innerText);
+        alert("데이터베이스 연결에 실패했습니다. 문제가 계속 될 경우 관리자에게 문의 바랍니다.");
+    }else if (document.getElementById("login-error")) {
+        alert("아이디와 비밀번호를 확인해주세요.");
+    }
+
+    // 키보드 > 엔터 로그인
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('#login_form input').forEach(input_node => addEventListener('keypress', function (e) {
+            let key = e.which || e.keyCode;
+            if (key === 13) { // 13 is enter
+                document.getElementById('btn-login').click();
+            }
+        }));
+
+    });
+</script>
+</html>

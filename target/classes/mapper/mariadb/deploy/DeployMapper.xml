@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.deploy.mapper.DeployMapper">
+    
+    <!-- 배포 서버 정보 조회 -->
+    <select id="getDeployList" parameterType="kr.co.wisenut.textminer.deploy.vo.DeployVo" resultType="kr.co.wisenut.textminer.deploy.vo.DeployVo">
+		SELECT /* kr.co.wisenut.textminer.deploy.mapper.DeployMapper.getDeployList */
+			   WS.SERVER_IP AS serverIp
+			 , WS.SERVER_TASK AS serverTask
+			 , WS.SERVER_PORT AS serverPort
+			 , WS.SERVER_TYPE  AS serverType
+			 , WS.SERVER_ID AS serverId
+			 , WS.SERVER_NAME AS serverName
+			 , WS.SERVER_DESC AS serverDesc
+			 , COALESCE(WS1.SERVER_CNT, 0) AS serverCnt
+			 , COALESCE(WS2.TASK_CNT, 0) AS taskCnt
+			 , CASE WHEN WS.SERVER_TYPE = 'PROD' 
+			 		THEN COALESCE(WS3.USE_CNT, 0)
+			 		ELSE 0 
+			   END AS "useTaskCnt"
+		FROM   WISETM_SERVER WS
+		LEFT OUTER JOIN (SELECT SERVER_IP
+							  , COUNT(*) AS SERVER_CNT
+						 FROM   WISETM_SERVER
+						 GROUP BY SERVER_IP ) WS1
+					 ON WS.SERVER_IP = WS1.SERVER_IP
+		LEFT OUTER JOIN (SELECT SERVER_IP
+							  , SERVER_TASK
+							  , COUNT(*) AS TASK_CNT
+						 FROM   WISETM_SERVER
+						 GROUP BY SERVER_IP, SERVER_TASK ) WS2
+					 ON WS.SERVER_IP = WS2.SERVER_IP
+					AND WS.SERVER_TASK = WS2.SERVER_TASK
+		LEFT OUTER JOIN (SELECT TASK_TYPE
+							  , COUNT(*) AS USE_CNT
+						 FROM   WISETM_TASK
+						 WHERE  ENABLED = 'Y'
+						 GROUP BY TASK_TYPE ) WS3
+					 ON WS.SERVER_TASK = WS3.TASK_TYPE
+		WHERE  1 = 1
+		<if test='serverType!=null and serverType!=""'>
+		  AND  WS.SERVER_TYPE = #{serverType}
+		</if>					
+		ORDER BY WS.SERVER_IP
+			   , CASE WS.SERVER_TASK
+			   	  WHEN 'AUTO_CLASSIFICATION' THEN 1
+			   	  WHEN 'EMOTION_ANALYZE' THEN 2
+			   	  WHEN 'KEYWORD_EXTRACTION' THEN 3
+			   	  WHEN 'RELATED_EXTRACTION' THEN 4
+			   	  WHEN 'DOCUMENT_SUMMARY' THEN 5
+			   	  WHEN 'EMOTION_PREPROECESS' THEN 6
+			   	  WHEN 'SUMMARY_PREPROECESS' THEN 7
+			   	  ELSE 8
+			   	 END ASC
+			   , WS.SERVER_TYPE DESC
+    </select>
+    
+    
+    <!-- 배포 서버 정보 상세 조회 -->
+    <select id="getDeployDetail" parameterType="kr.co.wisenut.textminer.deploy.vo.DeployVo" resultType="kr.co.wisenut.textminer.deploy.vo.DeployVo">
+		SELECT /* kr.co.wisenut.textminer.deploy.mapper.DeployMapper.getDeployDetail */
+			   SERVER_ID AS serverId
+			 , SERVER_NAME AS serverName
+			 , SERVER_DESC AS serverDesc
+			 , SERVER_IP AS serverIp
+			 , SERVER_PORT AS serverPort
+			 , SERVER_TYPE  AS serverType
+			 , SERVER_TASK AS serverTask
+		FROM   WISETM_SERVER
+		WHERE  1 = 1
+		<if test='serverId != null and serverId != 0'>
+		  AND  SERVER_ID = #{serverId} 
+		</if>
+		<if test='serverType != null and serverType != ""'>
+		  AND  SERVER_TYPE = #{serverType} 
+		</if>
+		<if test='serverTask != null and serverTask != ""'>
+		  AND  SERVER_TASK = #{serverTask} 
+		</if>
+    </select>
+
+    <!-- 배포 서버 정보 등록 -->
+    <insert id="insertDeploy" parameterType="kr.co.wisenut.textminer.deploy.vo.DeployVo">
+		<selectKey resultType="int" keyProperty="serverId" order="BEFORE">
+			SELECT COALESCE(MAX(SERVER_ID),0) + 1 FROM WISETM_SERVER
+		</selectKey>
+		
+		INSERT /* kr.co.wisenut.textminer.deploy.mapper.DeployMapper.insertDeploy */
+		INTO WISETM_SERVER (SERVER_ID, SERVER_NAME, SERVER_DESC, SERVER_TYPE, SERVER_TASK, SERVER_IP, SERVER_PORT, CRE_DT, CRE_USER, MOD_DT, MOD_USER)
+		VALUES ( #{serverId}
+			   , #{serverName}
+			   , #{serverDesc}
+			   , #{serverType}
+			   , #{serverTask}
+			   , #{serverIp}
+			   , #{serverPort}
+			   , CURRENT_TIMESTAMP
+			   , #{creUser}
+			   , CURRENT_TIMESTAMP
+			   , #{modUser}
+    		   )
+    </insert>
+    
+    <!-- 배포 서버 정보변경 -->
+    <update id="updateDeploy" parameterType="kr.co.wisenut.textminer.deploy.vo.DeployVo">
+    	UPDATE /* kr.co.wisenut.textminer.deploy.mapper.DeployMapper.updateDeploy */
+    		   WISETM_SERVER
+    	SET	   MOD_DT = CURRENT_TIMESTAMP
+    		 , MOD_USER = #{modUser}
+		<if test='serverName != null and serverName !=""'>
+			 , SERVER_NAME = #{serverName}
+		</if>
+		<if test='serverDesc != null and serverDesc !=""'>
+			 , SERVER_DESC = #{serverDesc}
+		</if>
+		<if test='serverType != null and serverType !=""'>
+			 , SERVER_TYPE = #{serverType}
+		</if>
+		<if test='serverTask != null and serverTask !=""'>
+			 , SERVER_TASK = #{serverTask}
+		</if>
+		<if test='serverIp != null and serverIp !=""'>
+			 , SERVER_IP = #{serverIp}
+		</if>
+		<if test='serverPort != null and serverPort !=""'>
+			 , SERVER_PORT = #{serverPort}
+		</if>
+    	WHERE  SERVER_ID = #{serverId}
+    </update>
+    
+    <!-- 배포 서버 정보 삭제 -->
+    <delete id="deleteDeploy" parameterType="kr.co.wisenut.textminer.deploy.vo.DeployVo">
+    	DELETE /* kr.co.wisenut.textminer.deploy.mapper.DeployMapper.deleteDeploy */
+    	FROM   WISETM_SERVER
+    	WHERE  SERVER_ID = #{serverId}
+    </delete>
+    
+</mapper>

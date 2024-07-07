@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.wisenut.textminer.dictionary.mapper.DictionaryMapper">
+
+	<!-- 공용사전 존재여부 확인 -->
+	<select id="getSharedDictionaryId" parameterType="hashmap" resultType="int">
+		SELECT /* kr.co.wisenut.mapper.DictionaryMapper.getSharedDictionaryId */
+			   COALESCE(DICTIONARY_ID, 0) AS "dictionaryId"
+		FROM   WISETM_DICTIONARIES
+		WHERE  DICTIONARY_TYPE = #{dictionaryType}
+		  AND  DICTIONARY_SHARED_YN = 'Y'
+	</select>
+
+	<!-- 사전 전체 건수 조회 -->
+	<select id="getDictionaryTotalCount" parameterType="hashmap" resultType="int">
+		SELECT /* kr.co.wisenut.mapper.DictionaryMapper.getDictionaryTotalCount */
+			   COUNT(*) AS "totalCount"
+		FROM  <include refid="selectTable"></include>
+	</select>
+
+	<!-- 사전 목록조회 -->
+	<select id="getDictionaryNames" parameterType="hashmap" resultType="kr.co.wisenut.textminer.dictionary.vo.DictionaryVo">
+		SELECT /* kr.co.wisenut.mapper.DictionaryMapper.getDictionaryNames */
+			   *
+		FROM ( SELECT WTD.DICTIONARY_ID AS "dictionaryId"
+					, WTD.DICTIONARY_NAME AS "dictionaryName"
+					, WTD.DICTIONARY_TYPE AS "dictionaryType"
+					, WTD.DICTIONARY_DESC AS "dictionaryDesc"
+					, WTD.DICTIONARY_SHARED_YN AS "dictionarySharedYn"
+					, WTD.DICTIONARY_OWNER AS "dictionaryOwner"
+					, WTE.CNT AS "dictionaryEntryCnt"
+			   FROM   WISETM_DICTIONARIES WTD
+			   LEFT OUTER JOIN ( SELECT DICTIONARY_ID
+									  , COUNT(*) AS "CNT"
+								 FROM   WISETM_ENTRIES
+								 GROUP BY DICTIONARY_ID ) WTE
+							ON WTD.DICTIONARY_ID  = WTE.DICTIONARY_ID ) WTD
+		WHERE  1 = 1
+		/*  AND  dictionaryEntryCnt > 0 */
+		<if test='role != "[ADMIN]"'>
+		  AND  DICTIONARY_OWNER = #{dictionaryOwner}
+		</if>
+	</select>
+
+	<!-- 사전 리스트 조회 -->
+	<select id="getDictionaryList" parameterType="hashmap" resultType="kr.co.wisenut.textminer.dictionary.vo.DictionaryVo">
+		SELECT /* kr.co.wisenut.mapper.DictionaryMapper.getDictionaryList */
+			   DICTIONARY_ID AS "dictionaryId"
+		  	 , DICTIONARY_NAME AS "dictionaryName"
+		  	 , DICTIONARY_TYPE AS "dictionaryType"
+		  	 , DICTIONARY_DESC AS "dictionaryDesc"
+		  	 , DICTIONARY_SHARED_YN AS "dictionarySharedYn"
+		  	 , DICTIONARY_OWNER AS "dictionaryOwner"
+		  	 , CNT AS "dictionaryEntryCnt"
+			 , TO_CHAR(CRE_DT, 'YYYY.MM.DD') AS "creDt"
+		FROM  <include refid="selectTable"></include>
+		WHERE  1 = 1
+		<if test='pageRow != null and pageRow != ""'>
+		  AND  PAGE_ROW = #{pageRow}
+		</if>
+		<if test='role != "[ADMIN]"'>
+		  AND  DICTIONARY_OWNER = #{dictionaryOwner}
+		</if>
+	</select>
+
+	<!-- 사전 상세 조회 -->
+	<select id="getDictionaryDetail" parameterType="kr.co.wisenut.textminer.dictionary.vo.DictionaryVo" resultType="kr.co.wisenut.textminer.dictionary.vo.DictionaryVo">
+		SELECT /* kr.co.wisenut.mapper.DictionaryMapper.getDictionaryDetail */
+			   DICTIONARY_ID AS "dictionaryId"
+			 , DICTIONARY_NAME AS "dictionaryName"
+			 , DICTIONARY_TYPE AS "dictionaryType"
+			 , DICTIONARY_DESC AS "dictionaryDesc"
+		  	 , DICTIONARY_SHARED_YN AS "dictionarySharedYn"
+			 , DICTIONARY_OWNER AS "dictionaryOwner"
+			 , TO_CHAR(CRE_DT, 'YYYY.MM.DD') AS "creDt"
+		FROM   WISETM_DICTIONARIES
+		WHERE  DICTIONARY_ID = #{dictionaryId}
+		<if test='role != "[ADMIN]"'>
+		  AND  DICTIONARY_OWNER = #{dictionaryOwner}
+		</if>
+	</select>
+
+	<!-- 사전 등록 -->
+	<insert id="insertDictionary" parameterType="kr.co.wisenut.textminer.dictionary.vo.DictionaryVo">
+		<selectKey resultType="int" keyProperty="dictionaryId" order="BEFORE">
+			SELECT COALESCE(MAX(DICTIONARY_ID),0) + 1 FROM WISETM_DICTIONARIES
+		</selectKey>
+		
+		INSERT /* kr.co.wisenut.textminer.dictionary.mapper.DictionaryMapper.insertDictionary */
+		/* INTO   WISETM_DICTIONARIES (DICTIONARY_ID, DICTIONARY_NAME, DICTIONARY_TYPE, DICTIONARY_DESC, DICTIONARY_SHARED_YN, DICTIONARY_OWNER, CRE_DT, CRE_USER, MOD_DT, MOD_USER) */
+		INTO   WISETM_DICTIONARIES (DICTIONARY_ID, DICTIONARY_NAME, DICTIONARY_TYPE, DICTIONARY_DESC, DICTIONARY_OWNER, CRE_DT, CRE_USER, MOD_DT, MOD_USER)
+		VALUES ( #{dictionaryId}
+			   , #{dictionaryName}
+			   , #{dictionaryType}
+			   , #{dictionaryDesc}
+			   /* , ${dictionarySharedYn} - 사용안함 */
+			   , #{dictionaryOwner}
+			   , CURRENT_TIMESTAMP
+			   , #{creUser}
+			   , CURRENT_TIMESTAMP
+			   , #{modUser}
+			   ) 
+	</insert>
+	
+	<!-- 사전 수정 -->
+	<update id="updateDictionary" parameterType="kr.co.wisenut.textminer.dictionary.vo.DictionaryVo">
+		UPDATE /* kr.co.wisenut.textminer.dictionary.mapper.DictionaryMapper.updateDictionary */
+			   WISETM_DICTIONARIES
+		SET    MOD_DT = CURRENT_TIMESTAMP
+			 , MOD_USER = #{modUser}
+		<if test='dictionaryName != null and dictionaryName != ""'>, DICTIONARY_NAME = #{dictionaryName}</if>
+		<if test='dictionaryType != null and dictionaryType != ""'>, DICTIONARY_TYPE = #{dictionaryType}</if>
+		<if test='dictionaryDesc != null and dictionaryDesc != ""'>, DICTIONARY_DESC = #{dictionaryDesc}</if>
+		<if test='dictionarySharedYn != null and dictionarySharedYn != ""'>, DICTIONARY_SHARED_YN = #{dictionarySharedYn}</if>
+		WHERE  DICTIONARY_ID = #{dictionaryId}
+		<if test='role != "[ADMIN]"'>
+		  AND  DICTIONARY_OWNER = #{dictionaryOwner}
+		</if>
+	</update>
+	
+	<!-- 사전 삭제 -->
+	<delete id="deleteDictionary" parameterType="kr.co.wisenut.textminer.dictionary.vo.DictionaryVo">
+		DELETE /* kr.co.wisenut.textminer.dictionary.mapper.DictionaryMapper.deleteDictionary */
+		FROM   WISETM_DICTIONARIES
+		WHERE  DICTIONARY_ID = #{dictionaryId}
+		<if test='role != "[ADMIN]"'>
+		  AND  DICTIONARY_OWNER = #{dictionaryOwner}
+		</if>
+	</delete>
+
+	<!-- 테이블 -->
+	<sql id="selectTable">
+	  ( SELECT TMP.*
+			 , CEIL( TMP.SEQ / #{pageSize} ) AS PAGE_ROW
+		FROM ( SELECT ROWNUM AS SEQ
+					, WTD.DICTIONARY_ID
+					, WTD.DICTIONARY_NAME
+					, WTD.DICTIONARY_TYPE
+					, WTD.DICTIONARY_DESC
+					, WTD.DICTIONARY_SHARED_YN
+					, WTD.DICTIONARY_OWNER
+					, COALESCE(WTE.CNT, 0) AS "CNT"
+					, WTD.CRE_DT
+					, WTD.CRE_USER
+					, WTD.MOD_DT
+					, WTD.MOD_USER
+			   FROM   WISETM_DICTIONARIES WTD
+			   LEFT OUTER JOIN ( SELECT DICTIONARY_ID
+									  , COUNT(*) AS "CNT"
+								 FROM   WISETM_ENTRIES
+								 GROUP BY DICTIONARY_ID ) WTE
+							ON WTD.DICTIONARY_ID  = WTE.DICTIONARY_ID
+			   ORDER BY WTD.DICTIONARY_ID DESC	
+			  ) TMP
+	  ) TOTAL
+	</sql>
+</mapper>

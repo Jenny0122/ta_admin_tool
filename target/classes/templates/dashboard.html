@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+<head>
+    <meta charset="utf-8">
+    <title>대시보드</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<section layout:fragment="content">
+<input type="hidden" id="historyFlag" value="">
+    <div class="cont_wrap">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>대시보드</h2>
+            </div>
+            <div class="cont_tit clearfix">
+                <div class="fL server_box w50">
+                    <div class="cont_title">
+                        <span class="titleLine"></span>
+                        <h3>프로젝트 현황</h3>
+                    </div>
+                    <div class="container" style="padding-left:10%;">
+                        <div class="cont1 clearfix board_box">
+                            <div class="fL mt20 w30p" style="width:100%; !important;">
+                                <div class="field-box" style="width:100%;min-width:570px">
+                                    <p class="field">
+								<span class="iconColl outline" style="border: solid 2px #0054b3; background-color: transparent;">
+									<i class="fas fa-th fa-lg"></i>
+									<span class="badge badge-warning">
+                                        <span id="span-num-project" class="txt1">0 개</span>
+									    <span class="txt2">전체 프로젝트</span>
+									</span>
+								</span>
+                                    </p>
+                                    <p class="field">
+								<span class="iconColl outline" style="border: solid 2px #337ab7; background-color: transparent;">
+									<i class="fas fa-tasks fa-lg"></i>
+									<span class="badge badge-warning">
+										<span id="count-services" class="txt1">0 개</span>
+										<span class="txt2">전체 서비스</span>
+									</span>
+								</span>
+                                    </p>
+                                    <p class="field">
+								<span class="iconColl outline" style="border: solid 2px #5cb85c; background-color: transparent;">
+									<i class="fas fa-folder-open fa-lg"></i>
+										<span class="badge badge-warning">
+											<span id="count-collections" class="txt1">0 건</span>
+											<span class="txt2">전체 컬렉션</span>
+										</span>
+								</span>
+                                    </p>
+                                    <p class="field">
+								<span class="iconColl outline" style="border: solid 2px #ff1515; background-color: transparent;">
+									<i class="fas fa-book"></i>
+										<span class="badge badge-warning">
+											<span id="count-dictionaries" class="txt1">0 건</span>
+											<span class="txt2">전체 사전</span>
+										</span>
+								</span>
+                                    </p>
+								<!-- 
+                                    <p class="field">
+								<span class="iconColl outline" style="border: solid 2px #0054b3; background-color: transparent;">
+									<i class="fas fa-tasks fa-lg"></i>
+									<span class="badge badge-warning">
+                                        <span id="span-num-task" class="txt1">0 개</span>
+									    <span class="txt2">전체 태스크</span>
+									</span>
+								</span>
+                                    </p>
+                                -->
+                                    <!-- <p class="mb10"></p> -->
+								<!-- 
+                                    <p class="field">
+								<span class="iconColl  outline" style="border: 2px solid #337ab7; background-color: transparent;">
+									<i class="fas fa-spinner"></i>
+									<span class="badge badge-warning">
+										<span id="span-num-analyzing" class="txt1">0 건</span>
+										<span class="txt2">분석 진행</span>
+									</span>
+								</span>
+                                    </p>
+                                    <p class="field">
+								<span class="iconColl outline" style="border: 2px solid #5cb85c; background-color: transparent;">
+									<i class="fas fa-check-circle"></i>
+										<span class="badge badge-warning ">
+											<span id="span-num-analyze-finished" class="txt1">0 건</span>
+											<span class="txt2">분석 완료</span>
+										</span>
+								</span>
+                                    </p>
+                                    <p class="field">
+								<span class="iconColl outline" style="border: 2px solid #ff1515; background-color: transparent;">
+									<i class="fas fa-exclamation-triangle"></i>
+										<span class="badge badge-warning">
+											<span id="span-num-analyze-failed" class="txt1">0 건</span>
+											<span class="txt2">분석 오류</span>
+										</span>
+								</span>
+                                    </p>
+                                -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="fR server_box w48_5" style="height: 338px; min-width:550px" >
+                    <div class="cont_title">
+                        <span class="titleLine"></span>
+                        <h3>Batch Log</h3>
+                    </div>
+                    <div class="fR mr25 mt20"><a id="batchHistory" href="#" onclick="document.getElementById('result_pop').style.display=''; $('#historyFlag').val('B'); $('#modal_title').text('Batch Log'); fnDoList(1);">더보기<i class="fas fa-chevron-right ml5"></i></a></div>
+                    <div class="container  mt5">
+                        <!--컬렉션 정보 table-->
+                        <table class="basic_tbl_type batchlog w500 align_c" >
+                            <colgroup>
+                                <col width="20%;">
+                                <col width="*">
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>날짜 및 시간</th>
+                                <th>실행 Log</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr id="BatchLogData">
+                                <td></td><!--3분전-->
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <!--컬렉션 정보 table end-->
+                    </div>
+                </div>
+            </div>
+            <div class="cont_tit clearfix" style="min-width:650px ">
+                <div class="fL server_box w50" style="height: 338px;">
+                    <div class="cont_title">
+                        <span class="titleLine"></span>
+                        <h3 >서버 현황</h3>
+                    </div>
+                    <div class="container">
+                        <div class="align_c ml15p">
+                            <div class="usage-chart">
+                                <h4>CPU</h4>
+                                <canvas id="cpu-chart"></canvas>
+                            </div>
+                            <div class="usage-chart">
+                                <h4>Memory</h4>
+                                <canvas id="memory-chart"></canvas>
+                            </div>
+                            <div class="usage-chart">
+                                <h4>HDD</h4>
+                                <canvas id="disk-chart"></canvas>
+                            </div>
+                        </div>
+                        <!--
+                        <div class="main_1">
+                            <div class="w200">
+                                <p class="server" th:text="|[TM서버] IP: ${tm_host}  Port: ${tm_port}|"><b>IP: </b>255.255.255.255 <b>Port: </b> 4000 </p>
+                                <p class="server" th:text="|[DB서버] IP: ${mongo_host}  Port: ${mongo_port}|"><b>IP: </b>255.255.255.255 <b>Port: </b> 4000 </p>
+                            </div>
+                        </div>
+                        -->
+                    </div>
+                </div>
+
+                <div class="fR server_box w48_5" style="height: 338px; min-width:550px" >
+                    <div class="cont_title">
+                        <span class="titleLine"></span>
+                        <h3>사용자 활동</h3>
+                    </div>
+                    <div class="fR mr25 mt20"><a id="userHistory" href="#" onclick="document.getElementById('result_pop').style.display=''; $('#historyFlag').val('U'); $('#modal_title').text('사용자 활동'); fnDoList(1);">더보기<i class="fas fa-chevron-right ml5"></i></a></div>
+                    <div class="container  mt5">
+                        <!--컬렉션 정보 table-->
+                        <table class="basic_tbl_type userlog w500 align_c" >
+                            <colgroup>
+                                <col width="20%;">
+                                <col width="*">
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>날짜 및 시간</th>
+                                <th>활동</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr id="firstData">
+                                <td></td><!--3분전-->
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <!--컬렉션 정보 table end-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--사용자 활동 더보기-->
+    <div id="result_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box medium">
+            <!-- 사용자 활동 팝업 top-->
+            <div class="top clearfix">
+                <h3 id="modal_title" class="fL">사용자 활동</h3>
+                <a href="#" class="close_result close fR" onclick="document.getElementById('result_pop').style.display='none'"><i class="fas fa-times"></i></a>
+            </div>
+            <!-- 사용자 활동 팝업 top end-->
+
+            <!-- 사용자 활동 팝업 내용 top-->
+            <div class="pop_container" style="height:600px">
+                <div class="cont_box m0">
+                    <div class="cont1 clearfix">
+                        <div class="mb20 fL">
+                            <label id="result-title" class="ml10 " style="width:auto; font-size: 20px; vertical-align: bottom;"></label>
+                        </div>
+                        <div class="">
+                            <table class="basic_tbl_type result-data" id="result-data">
+                                <colgroup>
+                                    <col width="23%;">
+                                    <col width="*;">
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <th>날짜 및 시간</th>
+                                    <th>활동</th>
+                                </tr>
+                                </thead>
+                                <tbody id="resultbody">
+
+                                </tbody>
+                            </table>
+
+                            <div class="page_btn_num clear_both" id="resultPagination">
+                                <!--a class="right" href="#">&lt;&lt;</a>
+                                <a class="right" href="#">&lt;</a>
+                                <a class="num click " href="#">1</a>
+                                <a class="right" href="#">&gt;</a>
+                                <a class="right" href="#">&gt;&gt;</a-->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 사용자 활동 내용 end-->
+            <!-- 사용자 활동 팝업 footer-->
+            <div class="pop_bottom align_c">
+
+            </div>
+            <!-- 사용자 활동 팝업 footer end-->
+        </div>
+    </div>
+
+    <script type="text/javascript" th:src="@{js/chart.js}"></script>
+    <script type="text/javascript" th:src="@{js/Chart.min.js}"></script>
+    <script type="text/javascript" th:src="@{/mng/dashboard.js}"></script>
+    <script type="text/javascript">
+
+        /**
+         * after doc-content-loaded.
+         * 화면 로드가 완료된 후 펑션 콜
+         */
+        document.addEventListener("DOMContentLoaded", function () {
+            // view update - status of user's TMResource ( collection, document, dictionary )
+            // getMongoStats();
+
+            try {
+                // view update - user history
+                getPagedUserHistory();
+                getPagedBatchHistory();
+
+                // example interval : 10초 인터벌 설정, 5분 후 해제
+                let interval_history = setInterval(getPagedUserHistory, 10 * 1000);
+                let interval_batch_history = setInterval(getPagedBatchHistory, 10 * 1000);
+                setTimeout(function () {
+                    clearInterval(interval_history);
+                }, 5 * 60 * 1000);
+            } catch (e) {
+                console.error(e);
+            }
+
+            Chart.pluginService.register({
+                beforeDraw: function (chart) {
+                    const chartWidth = chart.chart.width;
+                    const chartHeight = chart.chart.height;
+                    const canvas = chart.chart.ctx;
+                    const fillStyle = canvas.fillStyle;
+
+                    const percentage = Math.round(
+                        chart.config.data.datasets[0].data[0] * 100 /
+                        (chart.config.data.datasets[0].data[0] + chart.config.data.datasets[0].data[1])
+                    );
+                    const title = chart.options.title.text;
+
+                    canvas.restore();
+
+                    let fontSize = (chartHeight / 70).toFixed(2);
+                    canvas.font = fontSize + "em sans-serif";
+                    canvas.textBaseline = "middle";
+
+                    let text = percentage + "%";
+                    let textX = Math.round((chartWidth - canvas.measureText(text).width) / 2);
+                    let textY = chartHeight / 2 - 12;
+
+                    canvas.fillStyle = '#000000';
+                    canvas.fillText(text, textX, textY);
+
+                    fontSize = (chartHeight / 110).toFixed(2);
+                    canvas.font = fontSize + "em sans-serif";
+                    canvas.textBaseline = "hanging";
+                    text = title;
+                    textX = Math.round((chartWidth - canvas.measureText(text).width) / 2);
+                    textY = chartHeight / 2 + 15;
+                    canvas.fillStyle = '#444444';
+                    canvas.fillText(text, textX, textY);
+
+                    canvas.fillStyle = fillStyle;
+                    canvas.save();
+                }
+            });
+
+            // view update - tm-server resources, project-status
+            getResourceStatus();
+            getProjectStatus();
+
+
+            // connection test, if failed move to mypage
+            // testConnectionTmServer();
+        });
+
+    </script>
+</section>
+</body>
+</html>

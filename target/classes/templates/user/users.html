@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{template}">
+<head>
+    <style>
+        .comment {
+            color: #aaa;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 5%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<section layout:fragment="content">
+
+    <div class="cont_wrap mt100">
+        <div class="cont_area log">
+            <div class="cont_tit clearfix">
+                <h2>사용자 관리</h2>
+                <ul class="location">
+                    <li><i class="fas fa-home"></i><span>&gt;</span></li>
+                    <li>관리자 메뉴</li>
+                    <li><span>&gt;</span><strong>사용자 관리</strong></li>
+                </ul>
+            </div>
+            <div class="cont_box m0">
+                <h3>사용자 정보</h3>
+                <div class="container">
+                    <div class="cont1 clearfix">
+                        <div class="fL">
+                            <!--<label class="ml15" for="show">show</label>-->
+                            <!--<input type="number" class="w65 ml10" id="show" value="10" min="10" max="100" step="10">-->
+                            <!--<label for="show" class="ml10">Entities</label>-->
+                            <label class="ml15" for="user-id-search">검색 : </label>
+                            <input type="text" class="w220 ml20" id="user-id-search" placeholder="사용자 아이디 검색">
+                            <a href="#" class="btn_sch w35 ml10" ><i class="fas fa-search"></i></a>
+                        </div>
+                        <div class="fR">
+                            <button type="button" class="btn btn_sky w98 ml5" onclick="showPopup('create');"><i
+                                    class="fas fa-plus mr5"></i> 생성
+                            </button>
+                            <button type="button" class="btn btn_sky w98 ml5" onclick="showPopup('update');"><i
+                                    class="fas fa-edit  mr5"></i> 수정
+                            </button>
+                            <button id="btn-user-enable" type="button" class="btn btn_mint w98 ml5"
+                                    title="계정을 활성화 하면 해당 사용자는 서비스 사용이 가능해집니다."
+                                    onclick="enableUser()" style="display: none">
+                                <i class="fas fa-lock-open  mr5"></i> 활성
+                            </button>
+                            <button id="btn-user-disable" type="button" class="btn btn_mint w98 ml5"
+                                    title="계정을 비활성화 하면 해당 사용자는 로그아웃 되며 활성화 전까지 서비스를 이용할 수 없습니다."
+                                    onclick="disableUser()">
+                                <i class="fas fa-lock  mr5"></i>비활성
+                            </button>
+                            <button id="btn-user-delete" type="button" class="btn btn_gray w98 ml5"
+                                    title="비활성 상태의 계정만 삭제할 수 있습니다."
+                                    onclick="deleteUser();">
+                                <i class="fas fa-trash-alt  mr5"></i> 삭제
+                            </button>
+                        </div>
+                    </div>
+                    <!--사용자 관리 Table-->
+                    <table class="basic_tbl_type mt20">
+                        <colgroup>
+                            <col width="3%;">
+                            <col width="3%;">
+                            <col width="7%;">
+                            <col width="7%;">
+                            <col width="8%;">
+                            <col width="8%;">
+                            <col width="9%;">
+                            <col width="3%;">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th class="top_line">선택</th>
+                            <th class="top_line">NO.</th>
+                            <th class="top_line">아이디</th>
+                            <th class="top_line">이름</th>
+                            <th class="top_line">계정 유형</th>
+                            <th class="top_line">이메일</th>
+                            <th class="top_line">등록일</th>
+                            <th class="top_line">상태</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        <!--/* 사용자 리스트 출력 */-->
+                        <tr th:each="user, iterStat : ${users}" th:class="${user.isEnabled()}? '' : 'disable'"
+                            th:title="${!user.isEnabled()} ? '비활성화된 사용자' : (${#lists.contains(onlineUsers, user.userId)}? '현재 접속중인 사용자')">
+                            <!-- <td><input th:if="${!user.isAdministrator()}" type="radio" name="user_choice" th:value="${user.userId}" th:data-user-enable="${user.isEnabled()}"></td> -->
+                            <td><input type="radio" name="user_choice" th:value="${user.userId}" th:data-user-enable="${user.isEnabled()}"></td>
+                            <td th:text="${iterStat.count}"></td>
+                            <td th:text="${user.userId}"></td>
+                            <td th:text="${user.userName}"></td>
+                            <td th:text="${user.isAdministrator()}? '관리자' : '사용자'"></td>
+                            <td th:text="${user.userEmail}"></td>
+                            <td th:text="${user.creDt}"
+                                th:title="${user.creDt}"></td>
+                            <td th:text="${user.isEnabled()} ? '활성' : '비활성'"
+                                th:title="${#lists.contains(onlineUsers, user.userId)}? 'online'"></td>
+                        </tr>
+                        <!--/* 사용자 리스트 출력 end */-->
+
+                        </tbody>
+                    </table>
+                    <!--사용자 관리 table end-->
+
+                    <!--사용자 관리 pagination-->
+                    <!--<div class="page_btn_num clear_both">
+                        <a class="right" href="#">&lt;&lt;</a>
+                        <a class="right" href="#">&lt;</a>
+                        <a class="num click " href="#">1</a>
+                        <a class="num" href="#">2</a>
+                        <a class="right" href="#">&gt;</a>
+                        <a class="right" href="#">&gt;&gt;</a>
+                    </div>-->
+                    <!--사용자 관리 pagination end-->
+                </div>
+                <!-- container end-->
+            </div>
+            <!-- cont_box end -->
+        </div>
+        <!-- cont_area end-->
+    </div>
+    <!-- cont_wrap End-->
+
+    <!--사용자 관리 생성 팝업-->
+    <div id="create_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall">
+            <!--사용자 관리 생성 top-->
+            <div class="top clearfix">
+                <h3 class="fL">사용자 추가</h3>
+                <a href="#" class="close_create close fR" onclick="hidePopup('create');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+            <!--사용자 관리 생성 top end-->
+
+            <form onsubmit="return createUser();">
+				<input type="hidden" id="hlfcDscd" name="hlfcDscd">
+				<input type="hidden" id="blntBrno" name="blntBrno">
+
+                <!--사용자 관리 생성 내용-->
+                <div class="pop_container" style="height: 530px;">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+                            <div><label for="userid">아이디</label>
+                            	<input type="hidden" name="jobDiv" value="2"/>
+                                <input type="text" class="w170" id="userid" name="userId" required="required"
+                                       autofocus="autofocus" pattern="^[0-9a-zA-Z]{4,24}$"
+                                       title="4~24자 영문 대 소문자, 숫자를 사용하세요"
+                                       placeholder="예시) admin1">
+                                <button type="button" class="btn btn_mint w96" style="margin-left:1px;" onClick="idCheck()">
+                                	<i class="fas fa-link"></i>SSO 연동
+                                </button>
+                                <!-- <p class="comment"> * 4~24자 영문 대 소문자, 숫자를 사용하세요.</p> -->
+                            </div>
+                            <div class="mt20"><label for="user_name">이름</label>
+                                <input type="text" class="w270" id="user_name" name="userName" required="required"
+                                       placeholder="예시) 홍길동">
+                            </div>
+                            <div class="mt20"><label for="user_auth">권한</label>
+                            	<select class="w270" id="user_auth" name="userAuth">
+                            		<option value="" selected>선택해주세요.</option>
+                            		<option value="ADMIN">관리자</option>
+                            		<option value="USER">사용자</option>
+                            	</select>
+                            </div>
+                            <!--/*
+                            <div class="mt20">
+                                <label for="user_type">유형 지정</label>
+                                <select id="user_type" name="" class="w230">
+                                    <option value="" disabled selected>권한 선택</option>
+                                    <option value="USER">사용자</option>
+                                    <option value="ADMIN">관리자</option>
+                                </select>
+                            </div>
+                            */-->
+                            <div class="mt20">
+                                <div><label for="email">이메일</label>
+                                    <input type="text" class="w270" id="email" name="userEmail" required="required"
+                                           placeholder="예시) admin @ wisenut.co.kr">
+                                    <p class="comment"> * 이메일은 유효한 형식으로 입력 되어야 합니다.</p>
+                                </div>
+                            </div>
+                            <div class="mt20">
+                                <div><label for="user_pass">비밀번호</label>
+                                    <input type="password" class="w270" id="user_pass" name="userPw"
+                                           placeholder="비밀번호 설정"
+                                           autocomplete="off"
+                                           title="특수문자를 최소 하나 이상 포함한 8~16자리 영문 대 소문자, 숫자, 특수문자를 사용하세요."
+                                           pattern="^((?=.*[a-zA-Z0-9])(?=.*[^a-zA-Z0-9]).{8,16})$"
+                                           required="required">
+                                    <p class="comment">* 비밀번호는 특수문자를 반드시 1자 이상 포함하여 숫자, 영문 대/소문자(최소 8자/최대 16자)로 입력 되어야
+                                        합니다.</p>
+                                </div>
+                            </div>
+                            <div class="mt20">
+                                <div><label for="user_pass">비밀번호 확인</label>
+                                    <input type="password" class="w270" id="user_pass_confirm" name="passwordConfirm"
+                                           placeholder="비밀번호 확인"
+                                           autocomplete="off"
+                                           title="특수문자를 최소 하나 포함한 8~16자리 영문 대 소문자, 숫자, 특수문자를 사용하세요."
+                                           pattern="^((?=.*[a-zA-Z0-9])(?=.*[^a-zA-Z0-9]).{8,16})$"
+                                           required="required">
+                                    <p class="comment"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--사용자 관리 생성 내용 end-->
+
+                <!--사용자 관리 생성 footer-->
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98"><i class="far fa-save"></i> 생성</button>
+                </div>
+            </form>
+            <!--사용자 관리 생성 footer end-->
+        </div>
+    </div>
+    <!--사용자 관리 생성 팝업 end-->
+
+    <!-- 사용자 관리 수정 팝업-->
+    <div id="update_pop" class="marks_overlay pop_sum_plus" style="display:none;">
+        <div class="bg"></div>
+        <div class="pop_box xsmall">
+            <!--사용자 관리 수정 팝업 top-->
+            <div class="top clearfix">
+                <h3 class="fL">사용자 수정</h3>
+                <a href="#" class="close_update close fR" onclick="hidePopup('update');"><i
+                        class="fas fa-times"></i></a>
+            </div>
+            <!--사용자 관리 수정 팝업 top end-->
+
+            <form onsubmit="return updateUser();">
+
+                <!--사용자 관리 수정 팝업 내용-->
+                <div class="pop_container" style="height: 530px;">
+                    <div class="cont_box m0">
+                        <div class="cont1 clearfix">
+                            <div><label for="useridUP">아이디</label>
+                            	<input type="hidden" name="jobDiv" value="3">
+                            	<input type="hidden" name="userId" value="3">
+                                <input type="text" class="w270" id="useridUP" name="userId" required="required"
+                                       disabled placeholder="예시) admin1" readonly>
+                                <!-- <p class="comment"> * ID는 영문 대/소문자, 숫자 최소 4자/최대 24자만 입력 되어야 합니다.</p> -->
+                            </div>
+
+                            <div class="mt20"><label for="user_nameUP">이름</label>
+                                <input type="text" class="w270" id="user_nameUP" name="userName" required="required"
+                                       placeholder="예시) 홍길동" readonly>
+                            </div>
+                            <div class="mt20"><label for="user_authUP">권한</label>
+                            	<select class="w270" id="user_authUP" name="userAuth">
+                            		<option value="" selected>선택해주세요.</option>
+                            		<option value="ADMIN">관리자</option>
+                            		<option value="USER">사용자</option>
+                            	</select>
+                            </div>
+                            <!--/*
+                            <div class="mt20">
+                                <label for="user_typeUP">유형 지정</label>
+                                <select id="user_typeUP" name="" class="w230">
+                                    <option value="" disabled selected>권한 선택</option>
+                                    <option value="USER">사용자</option>
+                                    <option value="ADMIN">관리자</option>
+                                </select>
+                            </div>
+                             */-->
+                            <div class="mt20">
+                                <div><label for="user_emailUP">이메일</label>
+                                    <input type="text" class="w270" id="user_emailUP" name="userEmail" required="required"
+                                           placeholder="예시) admin @ wisenut.co.kr" readonly>
+                                    <p class="comment"> * 이메일은 유효한 형식으로 입력 되어야 합니다.</p>
+                                </div>
+                            </div>
+                            <div class="mt20">
+                                <div><label for="user_passUP">비밀번호</label>
+                                    <input type="password" class="w270" id="user_passUP" name="userPw"
+                                           autocomplete="off"
+                                           title="특수문자를 최소 하나 포함한 8~16자리 영문 대 소문자, 숫자, 특수문자를 사용하세요."
+                                           pattern="^((?=.*[a-zA-Z0-9])(?=.*[^a-zA-Z0-9]).{8,16})$"
+                                           placeholder="새로운 비밀번호 설정">
+                                    <p class="comment">* 비밀번호는 특수문자를 반드시 1자 이상 포함하여 숫자, 영문 대/소문자(최소 8자/최대 16자)로 입력 되어야 합니다.</p>
+                                </div>
+                            </div>
+                            <div class="mt20">
+                                <div><label for="user_pass">비밀번호 확인</label>
+                                    <input type="password" class="w270" id="user_passUP_confirm" name="passwordConfirm"
+                                           placeholder="새로운 비밀번호 확인" autocomplete="off"
+                                           title="특수문자를 최소 하나 포함한 8~16자리 영문 대 소문자, 숫자, 특수문자를 사용하세요."
+                                           pattern="^((?=.*[a-zA-Z0-9])(?=.*[^a-zA-Z0-9]).{8,16})$">
+                                    <p class="comment"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--사용자 관리 수정 팝업  내용 end-->
+
+                <!--사용자 관리 수정 팝업 footer-->
+                <div class="pop_bottom align_c">
+                    <button type="submit" class="btn btn_blue w98"><i class="far fa-save"></i> 수정</button>
+                </div>
+                <!--사용자 관리 수정 footer end-->
+
+            </form>
+        </div>
+    </div>
+    <!--사용자 관리 수정 팝업 end-->
+
+    <script type="text/javascript" th:src ="@{/mng/user/users.js}"></script>
+    <script type="text/javascript">
+
+        // 화면 로드 후
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // add eventListener to radio[name_choice] : 사용자 선택
+            [...document.querySelectorAll("input[type=radio][name=user_choice]")]
+                .forEach(radioButton => radioButton.addEventListener("change", function (event) {
+                    const btnEnable = document.getElementById("btn-user-enable");
+                    const btnDisable = document.getElementById("btn-user-disable");
+                    const btnDelete = document.getElementById("btn-user-delete");
+
+                    if (radioButton.dataset.userEnable && radioButton.dataset.userEnable === "true") {
+                        // 사용자 활성상태 -> 비활성화 버튼 노출
+                        btnEnable.style.display = "none";
+                        btnDisable.style.display = "";
+                        btnDelete.disabled = true;
+                        btnDelete.classList.remove("btn_red");
+                        btnDelete.classList.add("btn_gray");
+                    } else {
+                        // 사용자 비활성화 상태 --> 활성화, 삭제 버튼 노출
+                        btnEnable.style.display = "";
+                        btnDisable.style.display = "none";
+                        btnDelete.disabled = false;
+                        btnDelete.classList.remove("btn_gray");
+                        btnDelete.classList.add("btn_red");
+                    }
+                }));
+
+            // add eventListener to user-search : 사용자 id 검색
+            $("#user-id-search").on("keyup", function () {
+                let value = $(this).val().toLowerCase();
+                $("table.basic_tbl_type tbody tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+
+            radioByTableRowClick();
+        });
+    </script>
+
+</section>
+</body>
+
+</html>

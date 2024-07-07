@@ -1,0 +1,5 @@
+askZoom=Enter zoom (%)
+properties= 속성
+outline=Outline
+tasks=Tasks
+help=Help
