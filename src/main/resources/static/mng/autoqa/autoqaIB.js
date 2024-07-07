@@ -309,7 +309,19 @@ const showPopupRowDetail = function(target, scriptId) {
 				data: JSON.stringify(params),
 				async: false,
 				success: function(data) {
-					console.log(data)
+					var rowData = data.resultList
+					var rows = ""
+					for(var i in rowData) {
+						rows += "<tr>\n"
+						+ "\t<td>\n"
+						+ "\t\t<input type=\"text\" class=\"ml0 w75\" id=\"input_simscript_" + resultList.simScriptId + "\" name=\"sim_script\" value=\"" + resultList.simScriptCont + "\">\n"
+						+ "\t\t<input type=\"button\" class=\"btn btn_sky w65 ml10\" value=\"수정\" onclick=\"updateSimScript(" + resultList.simScriptId + ")\" style=\"font-size:inherit;\">\n"
+						+ "\t\t<input type=\"button\" class=\"btn btn_sky w65 ml10\" value=\"삭제\" onclick=\"deleteSimScript(" + resultList.simScriptId + ")\" style=\"font-size:inherit;\">\n"
+						+ "\t</td>\n"
+						+ "</tr>\n"
+					}
+
+					$("#sim_script_table > tbody").html(rows)
 				},
 				error: function(error) {
 					console.log(error)

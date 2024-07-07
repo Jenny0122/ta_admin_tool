@@ -152,10 +152,9 @@
 			   WISETM_QA_SIMILARITY_SCRIPT
 		SET    MOD_DT = CURRENT_TIMESTAMP
 			 , MOD_USER = #{modUser}
-		<if test='similarityScriptCont != null and similarityScriptCont != ""'>, COMPLIANCE_ITEM_CD = #{complianceItemCd}</if>
+			 , SIMILARITY_SCRIPT_CONT = #{simScriptCont}
 		<if test='delYn != null and delYn != ""'>, DEL_YN = #{delYn}</if>
-		WHERE  SCRIPT_ID = #{scriptId}
-		AND CATEGORY_ID = #{categoryId}) 
+		WHERE  SIMILARITY_SCRIPT_ID = #{simScriptId}
 	</update>
 	
 	<!-- 유사스크립트 삭제 -->
