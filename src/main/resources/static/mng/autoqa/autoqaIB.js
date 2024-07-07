@@ -96,11 +96,15 @@ function fnCateTree() {
 					list.unshift(node.text)
 				}
 				$("#category_depth").text(list.join(' > '))
-
+				var params = new Object();
 				$.ajax({
 					async: false,
 					type: "POST",
 					url: contextPath + '/autoqaRest/getQAScriptList',
+					cache: false,
+					contentType: "application/json",
+					dataType: "json",
+					data: JSON.stringify(params),
 					success: function(data) {
 						console.log(data)
 
