@@ -25,6 +25,7 @@ function fnDoList(pageRow) {
 			$("#listArea").html("<div id='LoadingImage' class='loading-LoadingImage'><div style='margin-left:50%'><img th:src='@{/img/loading.gif}'></div></div>");
 		},
 		success: function(data) {
+
 			setTimeout(function() {
 				$("#LoadingImage").remove();
 
@@ -96,7 +97,7 @@ function fnCateTree() {
 					list.unshift(node.text)
 				}
 				$("#category_depth").text(list.join(' > '))
-				fnDoList();
+				fnDoList(1);
 				// var params = new Object();
 				// $.ajax({
 				// 	async: false,
@@ -263,10 +264,6 @@ const showPopup = function(target) {
 			$target = $("#download_pop");
 			$target.show();
 			break;
-		case "sim_script":
-			$target = $("#sim_script_pop");
-			$target.show();
-			break;
 		default:
 			console.error(`Undefined popup target="${target}"`);
 	}
@@ -295,17 +292,28 @@ const hidePopup = function(target) {
 	$target.hide();
 };
 
-const showPopupRowDetail = function(target, rowNum) {
+const showPopupRowDetail = function(target, scriptId) {
 	let $target;
+
+	var params = new Object();
+	params.scriptId = scriptId;
 	switch (target) {
 		case "sim_script":
 			$target = $("#sim_script_pop");
 			$.ajax({
+				url: contextPath + '/autoqaRest/getQASimScriptList',
+				type: "POST",
+				cache: false,
+				contentType: "application/json",
+				dataType: "json",
+				data: JSON.stringify(params),
 				async: false,
-				type: "GET",
-				url: contextPath + '/autoqaRest/getScripts?categoryId=' + id.text,
-				success: function(data) {},
-				error: function(error) {}
+				success: function(data) {
+					console.log(data)
+				},
+				error: function(error) {
+					console.log(error)
+				}
 			});
 
 

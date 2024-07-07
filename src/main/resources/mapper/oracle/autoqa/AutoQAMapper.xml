@@ -109,8 +109,8 @@
 		FROM  WISETM_QA_SIMILARITY_SCRIPT
 		WHERE  1 = 1
 			AND DEL_YN = 'N'
-		<if test='similarity_script_id != null and similarity_script_id != ""'>
-			AND  SIMILARITY_SCRIPT_ID = #{similarityScriptId}
+		<if test='scriptId != null and scriptId != ""'>
+			AND SCRIPT_ID = #{scriptId}
 		</if>
 	</select>
 	

@@ -237,7 +237,7 @@ public class AutoQAService {
 
 				// 유사문장
 				convertHtml.append("\t\t<td>");
-				convertHtml.append("<button type=\"button\" class=\"btn test_btn btn_gray w98\" onclick=\"hidePopup('create')\"><i class=\"fas fa-link mr5\"></i>유사문장</button>\n");
+				convertHtml.append("<button type=\"button\" class=\"btn test_btn btn_gray w98\" onclick=\"showPopupRowDetail('sim_script'"+ resultList.get(i).getScriptId() + ")\"><i class=\"fas fa-link mr5\"></i>유사문장</button>\n");
 				convertHtml.append("</td>\n");
 
 				// 키워드
