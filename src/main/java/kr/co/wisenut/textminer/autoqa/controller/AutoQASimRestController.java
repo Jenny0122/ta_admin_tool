@@ -25,6 +25,26 @@ public class AutoQASimRestController {
 
     private final ActionHistoryService actionHistoryService;
 
+    // 스크립트 리스트 조회
+    @PostMapping("/getQAScriptListTest")
+    public Map<String, Object> getQAScriptList( @RequestBody Map<String, Object> paramMap
+            , HttpServletRequest request
+            , @AuthenticationPrincipal(errorOnInvalidType = true) TmUser user) {
+        Map<String, Object> resultMap = new HashMap<String, Object>();
+
+        try {
+            paramMap.put("pageSize", 10);
+            paramMap.put("role", user.getAuthorities().toString());
+            paramMap.put("contextPath", request.getContextPath());
+
+            resultMap = autoQASimService.getQAScriptListTest(paramMap);
+        } catch (Exception e) {
+            log.error("tm-user getDataList failed. {}", e.getMessage());
+        }
+
+        return resultMap;
+    }
+
     /**
      * 유사 스크립트 리스트 조회
      */

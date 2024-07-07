@@ -100,7 +100,7 @@ function fnCateTree() {
 				$.ajax({
 					async: false,
 					type: "POST",
-					url: contextPath + '/autoqaRest/getQAScriptList',
+					url: contextPath + '/autoqaRest/getQAScriptListTest',
 					cache: false,
 					contentType: "application/json",
 					dataType: "json",
