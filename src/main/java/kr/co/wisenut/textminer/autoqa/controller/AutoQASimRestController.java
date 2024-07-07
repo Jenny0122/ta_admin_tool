@@ -102,6 +102,8 @@ public class AutoQASimRestController {
 
         Map<String, Object> resultMap = new HashMap<>();
 
+        log.info(autoQaSimScriptVo.toString());
+
 
         try {
             autoQaSimScriptVo.setRole( user.getAuthorities()

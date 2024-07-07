@@ -3,9 +3,11 @@ package kr.co.wisenut.textminer.autoqa.vo;
 import kr.co.wisenut.textminer.common.vo.ImportProgressVo;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 public class AutoQaSimScriptVo extends ImportProgressVo {
 	
 	private int simScriptId;									// 유사스크립트ID
