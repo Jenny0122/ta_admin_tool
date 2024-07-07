@@ -107,32 +107,35 @@ function fnCateTree() {
 					data: JSON.stringify(params),
 					success: function(data) {
 						console.log(data)
+						var rowData = data.dataTable
+						var rows = ""
+						for(var i in rowData){
+							rows = "<tr>\n"
+								+ "\t<td><input type=\"checkbox\" name=\"qa_choice\" value=\"qa_choice_{{0}}\"></td>\n".format(i)
+								+ "\t<td></td>\n"
+								+ "\t<td>\n"
+								+ "\t\t<select id=\"compliance_item_cd_{{rowNum}}\" name=\"complianceItemCd\" class=\"w180\" required readonly=\"readonly\">\n"
+								+ "\t\t\t<option value=\"\" selected disabled>준수항목을 선택하세요</option>\n"
+								+ "\t\t\t<option value=\"comItem01\" th:selected=\"${complianceItemCd=='10'}? 'selected'\">첫인사</option>\n"
+								+ "\t\t\t<option value=\"comItem02\" th:selected=\"${complianceItemCd=='20'}? 'selected'\">대기안내</option>\n"
+								+ "\t\t\t<option value=\"comItem03\" th:selected=\"${complianceItemCd=='30'}? 'selected'\">종료시점</option>\n"
+								+ "\t\t\t<option value=\"comItem04\" th:selected=\"${complianceItemCd=='40'}? 'selected'\">끝인사</option>\n"
+								+ "\t\t\t<option value=\"comItem05\" th:selected=\"${complianceItemCd=='50'}? 'selected'\">금지용어</option>\n"
+								+ "\t\t</select>\n"
+								+ "\t</td>\n"
+								+ "\t<td><input type=\"text\" name=\"score\" style=\"width:95%\" value=\"{{0}}\" readonly=\"readonly\"></td>\n".format(rowData[i].score)
+								+ "\t<td><input type=\"text\" name=\"scriptCont\" style=\"width:95%\" value=\"{{0}}\" readonly=\"readonly\"></td>\n".format(rowData[i].scriptCont)
+								+ "\t<td>\n"
+								+ "\t\t<button id=\"saveSimScriptBtn\" type=\"button\" class=\"btn btn_blue w98\" onclick=\"showPopupRowDetail('sim_script', {{0}})\"><i class=\"far fa-save\"></i>유사문장</button>\n".format(i)
+								+ "\t</td>\n"
+								+ "\t<td>\n"
+								+ "\t\t<button id=\"saveBtn\" type=\"button\" class=\"btn btn_green w98\" onclick=\"saveKeyword()\"><i class=\"far fa-save\"></i>키워드</button>\n"
+								+ "\t</td>\n"
+								+ "</tr>\n"
 
-						var row = ""
-						row = "<tr>\n"
-							+ "\t<td><input type=\"checkbox\" name=\"qa_choice\" value=\"qa_choice_{{0}}\"></td>\n"
-							+ "\t<td></td>\n"
-							+ "\t<td>\n"
-							+ "\t\t<select id=\"compliance_item_cd_{{rowNum}}\" name=\"complianceItemCd\" class=\"w180\" required readonly=\"readonly\">\n"
-							+ "\t\t\t<option value=\"\" selected disabled>준수항목을 선택하세요</option>\n"
-							+ "\t\t\t<option value=\"comItem01\" th:selected=\"${complianceItemCd=='10'}? 'selected'\">첫인사</option>\n"
-							+ "\t\t\t<option value=\"comItem02\" th:selected=\"${complianceItemCd=='20'}? 'selected'\">대기안내</option>\n"
-							+ "\t\t\t<option value=\"comItem03\" th:selected=\"${complianceItemCd=='30'}? 'selected'\">종료시점</option>\n"
-							+ "\t\t\t<option value=\"comItem04\" th:selected=\"${complianceItemCd=='40'}? 'selected'\">끝인사</option>\n"
-							+ "\t\t\t<option value=\"comItem05\" th:selected=\"${complianceItemCd=='50'}? 'selected'\">금지용어</option>\n"
-							+ "\t\t</select>\n"
-							+ "\t</td>\n"
-							+ "\t<td><input type=\"text\" name=\"score\" style=\"width:95%\" value=\"{{value}}\" readonly=\"readonly\"></td>\n"
-							+ "\t<td><input type=\"text\" name=\"scriptCont\" style=\"width:95%\" value=\"{{value}}\" readonly=\"readonly\"></td>\n"
-							+ "\t<td>\n"
-							+ "\t\t<button id=\"saveSimScriptBtn\" type=\"button\" class=\"btn btn_blue w98\" onclick=\"showPopupRowDetail('sim_script', {{rowNum}})\"><i class=\"far fa-save\"></i>유사문장</button>\n"
-							+ "\t</td>\n"
-							+ "\t<td>\n"
-							+ "\t\t<button id=\"saveBtn\" type=\"button\" class=\"btn btn_green w98\" onclick=\"saveKeyword()\"><i class=\"far fa-save\"></i>키워드</button>\n"
-							+ "\t</td>\n"
-							+ "</tr>\n"
+						}
 						// row 만들어서 추가
-						//$("#dataTable > tbody").html(row);
+						$("#dataTable > tbody").html(rows);
 					},
 					error: function(error) {}
 				});
