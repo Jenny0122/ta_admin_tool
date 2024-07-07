@@ -310,10 +310,10 @@
 		<!--유사문장 추가 팝업-->
 		<div id="sim_script_pop" class="marks_overlay pop_sum_plus" style="display:none;">
 			<div class="bg"></div>
-			<div class="pop_box xsmall">
+			<div class="pop_box medium">
 				<!--스크립트 추가 top-->
 				<div class="top clearfix">
-					<h3 class="fL">유사문장</h3>
+					<h3 class="fL">유사 스크립트 (~~~~)</h3>
 					<a href="#" class="close_create close fR" onclick="hidePopup('sim_script');"><i class="fas fa-times"></i></a>
 				</div>
 
@@ -327,9 +327,23 @@
 						</div>
 					</div>
 
-					<div class="align_l clearfix">
-						<input type="text" class="ml0 w93p mt30" id="test2" name="entry" placeholder="추가할 사전 엔트리" onkeydown="if(event.keyCode === 13) addEntry()">
-						<input type="button" class="btn btn_sky w65 mt30 ml10" value="추가" onclick="addEntry()" style="font-size:inherit;">
+
+					<div class="cont_box m0">
+						<span>스크립트 목록</span>
+						<div class="align_l clearfix">
+							<table>
+								<tr>
+									<th style="background-color: lightgrey">스크립트</th>
+								</tr>
+								<tr>
+									<td>
+										<input type="text" class="ml0 w93p mt30" id="test123" name="script">
+										<input type="button" class="btn btn_sky w65 mt30 ml10" value="수정" onclick="" style="font-size:inherit;">
+										<input type="button" class="btn btn_sky w65 mt30 ml10" value="삭제" onclick="" style="font-size:inherit;">
+									</td>
+								</tr>
+							</table>
+						</div>
 					</div>
 				</div>
 
@@ -361,9 +375,6 @@
 
 	</div>
 	<!--// 240702 cont_wrap 변경-->
-	</script>
-
-
 </section>
 </body>
 
