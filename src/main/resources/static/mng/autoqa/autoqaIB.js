@@ -175,7 +175,7 @@ function compCdDataSet() {
 	        		// 옵션 비활성화 처리하기
 	        		$(".optionList").find('input,select').prop('disabled', true);
 	        		// predictThreshold는 조정할 수 있도록 disabled 해제
-	        		$('input[name="predictThreshold"').prop('disabled', false);
+	        		$('input[name="predictThreshold"]').prop('disabled', false);
 	
 					$('#addBtn').hide();
 					$('#saveBtn').show();
@@ -220,7 +220,7 @@ const showPopup = function(target) {
 			$target.show();
 			break;
 		case "sim_script":
-			$target = $("#sim_script");
+			$target = $("#sim_script_pop");
 			// $target.find("input,select").val("");
 			$target.show();
 			break;
@@ -241,6 +241,9 @@ const hidePopup = function(target) {
 			break;
 		case "download":
 			$target = $("#download_pop");
+			break;
+		case "sim_script":
+			$target = $("#sim_script_pop");
 			break;
 		default:
 			console.error(`Undefined popup target="${target}"`);

@@ -308,7 +308,7 @@
 		<!--스크립트 다운로드 팝업 end-->
 
 		<!--유사문장 추가 팝업-->
-		<div id="sim_script" class="marks_overlay pop_sum_plus" style="display:none;">
+		<div id="sim_script_pop" class="marks_overlay pop_sum_plus" style="display:none;">
 			<div class="bg"></div>
 			<div class="pop_box xsmall">
 				<!--스크립트 추가 top-->
@@ -319,8 +319,20 @@
 
 				<!-- 유사문장 popup 내용-->
 				<div class="pop_container large">
-					<div class="cont_box m0"></div>
+					<div class="cont_box m0">
+
+						<div class="align_l clearfix">
+							<input type="text" class="ml0 w93p mt30" id="test1" name="entry" placeholder="추가할 사전 엔트리" onkeydown="if(event.keyCode === 13) addEntry()">
+							<input type="button" class="btn btn_sky w65 mt30 ml10" value="추가" onclick="addEntry()" style="font-size:inherit;">
+						</div>
 					</div>
+
+					<div class="align_l clearfix">
+						<input type="text" class="ml0 w93p mt30" id="test2" name="entry" placeholder="추가할 사전 엔트리" onkeydown="if(event.keyCode === 13) addEntry()">
+						<input type="button" class="btn btn_sky w65 mt30 ml10" value="추가" onclick="addEntry()" style="font-size:inherit;">
+					</div>
+				</div>
+
 
 				<!--스크립트 추가 top end-->
 			</div>
