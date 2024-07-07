@@ -95,7 +95,7 @@ public class AutoQASimRestController {
     /**
      * 유사 스크립트 수정
      */
-    @DeleteMapping( "/updateQASimScript" )
+    @PostMapping( "/updateQASimScript" )
     public Map<String, Object> updateQASimScript( AutoQaSimScriptVo autoQaSimScriptVo
             , HttpServletRequest request
             , @AuthenticationPrincipal( errorOnInvalidType = true ) TmUser user ) {
