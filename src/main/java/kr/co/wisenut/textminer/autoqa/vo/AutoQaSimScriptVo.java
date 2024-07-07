@@ -10,7 +10,7 @@ public class AutoQaSimScriptVo extends ImportProgressVo {
 	
 	private int simScriptId;									// 유사스크립트ID
 	private String simScriptCont;							// 유사스크립트내용
-	private String del_Yn;											// 삭제여부
+	private String delYn;											// 삭제여부
 	private String creDt;											// 등록일자
 	private String creUser;										// 등록자ID
 	private String modDt;											// 수정날짜

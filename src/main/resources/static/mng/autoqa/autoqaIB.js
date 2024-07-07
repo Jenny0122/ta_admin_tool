@@ -669,7 +669,7 @@ const deleteSimScript = function(simScriptId) {
 		data: JSON.stringify(params), //default contentType: 'application/x-www-form-urlencoded'
 		beforeSend: function() {
 		},
-		success: function(data) {
+		success: function(response) {
 			alert(response.resultMsg);
 
 			if (response.result == "S") location.reload();
