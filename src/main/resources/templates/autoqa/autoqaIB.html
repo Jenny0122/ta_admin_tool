@@ -322,9 +322,9 @@
 					<div class="cont_box mt20">
 						<span>스크립트 등록</span>
 						<div class="align_l clearfix">
-							<span>스크립트</span>
+							<span class="ml0 mt30">스크립트</span>
 							<input type="text" class="ml0 w77 mt30" id="test1" name="entry">
-							<input type="button" class="btn btn_sky w65 mt30 ml10" value="추가" onclick="addEntry()" style="font-size:inherit;">
+							<input type="button" class="btn btn_sky w50 mt30 ml10" value="추가" onclick="addScript()">
 						</div>
 					</div>
 
@@ -334,13 +334,13 @@
 						<div class="align_l clearfix">
 							<table class="basic_tbl_type mt20 text-ellipsis">
 								<tr>
-									<th style="background-color: lightgrey">스크립트</th>
+									<th style="background-color: lightgrey; text-align: center;">스크립트</th>
 								</tr>
 								<tr>
 									<td>
-										<input type="text" class="ml0 w93p mt30" id="test123" name="script">
-										<input type="button" class="btn btn_sky w65 mt30 ml10" value="수정" onclick="" style="font-size:inherit;">
-										<input type="button" class="btn btn_sky w65 mt30 ml10" value="삭제" onclick="" style="font-size:inherit;">
+										<input type="text" class="ml0 w50" id="test123" name="script">
+										<input type="button" class="btn btn_sky w65 ml10" value="수정" onclick="updateScript()" style="font-size:inherit;">
+										<input type="button" class="btn btn_sky w65 ml10" value="삭제" onclick="deleteScript()" style="font-size:inherit;">
 									</td>
 								</tr>
 							</table>
