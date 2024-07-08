@@ -62,6 +62,8 @@ public class AutoQASimService {
 
         Map<String, Object> resultMap = new HashMap<>();
 
+        System.out.println(autoQaSimScriptVo);
+
         try {
 
             int result = autoQaMapper.insertQASimScript(autoQaSimScriptVo);
@@ -119,6 +121,8 @@ public class AutoQASimService {
     public Map<String, Object> deleteQASimScript(AutoQaSimScriptVo autoQaSimScriptVo) {
 
         Map<String, Object> resultMap = new HashMap<>();
+
+        System.out.println(autoQaSimScriptVo);
 
         try {
 
