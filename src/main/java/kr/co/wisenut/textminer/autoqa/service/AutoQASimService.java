@@ -91,6 +91,8 @@ public class AutoQASimService {
     public Map<String, Object> updateQASimScript(AutoQaSimScriptVo autoQaSimScriptVo) {
         Map<String, Object> resultMap = new HashMap<>();
 
+        System.out.println(autoQaSimScriptVo);
+
         try {
             int result = autoQaMapper.updateQASimScript(autoQaSimScriptVo);
 
