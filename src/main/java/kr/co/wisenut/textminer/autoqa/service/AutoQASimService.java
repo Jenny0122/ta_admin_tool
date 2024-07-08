@@ -60,7 +60,7 @@ public class AutoQASimService {
      */
     public Map<String, Object> insertQASimScript(AutoQaSimScriptVo autoQaSimScriptVo) {
 
-        Map<String, Object> resultMap = new HashMap<String, Object>();
+        Map<String, Object> resultMap = new HashMap<>();
 
         try {
 
