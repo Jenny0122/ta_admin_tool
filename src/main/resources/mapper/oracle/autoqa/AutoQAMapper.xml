@@ -155,13 +155,13 @@
 	
 	<!-- 유사스크립트 삭제 -->
 	<delete id="deleteQASimScript" parameterType="kr.co.wisenut.textminer.autoqa.vo.AutoQaSimScriptVo">
-		UPDATE /* kr.co.wisenut.mapper.AutoQAMapper.deleteQASimScript*/
+		UPDATE /* kr.co.wisenut.mapper.AutoQAMapper.deleteQASimScript */
 		   WISETM_QA_SIMILARITY_SCRIPT
 		SET    DEL_YN = 'Y'
 			, MOD_DT = CURRENT_TIMESTAMP
 			, MOD_USER = #{modUser}
 		WHERE  /* SCRIPT_ID = #{scriptId} AND */
-			   SIMILARITY_SCRIPT_ID = #{simScriptId})
+			   SIMILARITY_SCRIPT_ID = #{simScriptId}
 	</delete>
 	
 	

@@ -324,9 +324,7 @@ const showPopupRowDetail = function(target, scriptId) {
 						insertInputStr += "<input type=\"text\" class=\"ml0 w50 mt30\" id=\"sim_script_new\" name=\"entry\">\n";
 						insertInputStr += "<input type=\"button\" class=\"btn btn_sky w65 mt30 ml10\" value=\"추가\" onclick=\"addSimScript(" + scriptId + ")\">\n"
 
-
-
-					$("#sim_script_pop_insert span").html(insertInputStr)
+					$("#sim_script_pop_insert").html(insertInputStr)
 
 					var rowData = data.resultList
 					var rows = ""
