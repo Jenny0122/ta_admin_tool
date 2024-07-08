@@ -122,7 +122,8 @@
 		
 		INSERT /* kr.co.wisenut.mapper.AutoQAMapper.insertQASimScript */
 		INTO WISETM_QA_SIMILARITY_SCRIPT (
-			SIMILARITY_SCRIPT_CONT
+			SIMILARITY_SCRIPT_ID
+			, SIMILARITY_SCRIPT_CONT
 			, DEL_YN
 			, CRE_DT
 			, CRE_USER
@@ -130,14 +131,15 @@
 			, MOD_USER
 			, SCRIPT_ID
 		)
-		VALUES ( 
-             #{simScriptCont}
-             , 'N'
-             , CURRENT_TIMESTAMP
-             , #{creUser}
-             , CURRENT_TIMESTAMP
-             , #{modUser}
-		     , #{scriptId}
+		VALUES (
+			wisetm_qa_similarity_script.NEXTVAL
+            , #{simScriptCont}
+            , 'N'
+            , CURRENT_TIMESTAMP
+            , #{creUser}
+            , CURRENT_TIMESTAMP
+            , #{modUser}
+		    , #{scriptId}
 		)
 	</insert>
 	
