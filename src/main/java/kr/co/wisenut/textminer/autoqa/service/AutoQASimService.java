@@ -62,14 +62,12 @@ public class AutoQASimService {
 
         Map<String, Object> resultMap = new HashMap<>();
 
-        System.out.println(autoQaSimScriptVo);
-
         try {
 
             int result = autoQaMapper.insertQASimScript(autoQaSimScriptVo);
 
             if (result > 0) {
-                resultMap.put("SimscriptId", autoQaSimScriptVo.getSimScriptId());
+                resultMap.put("data", autoQaSimScriptVo);
                 resultMap.put("result", "S");
                 resultMap.put("resultMsg", "유사 스크립트 등록 작업이 완료되었습니다.");
             } else {
@@ -93,13 +91,12 @@ public class AutoQASimService {
     public Map<String, Object> updateQASimScript(AutoQaSimScriptVo autoQaSimScriptVo) {
         Map<String, Object> resultMap = new HashMap<>();
 
-        System.out.println(autoQaSimScriptVo);
-
         try {
             int result = autoQaMapper.updateQASimScript(autoQaSimScriptVo);
 
             if (result > 0) {
                 resultMap.put("result", "S");
+                resultMap.put("data", autoQaSimScriptVo);
                 resultMap.put("resultMsg", "유사 스크립트 수정 작업이 완료되었습니다.");
             } else {
                 resultMap.put("result", "F");
@@ -122,8 +119,6 @@ public class AutoQASimService {
 
         Map<String, Object> resultMap = new HashMap<>();
 
-        System.out.println(autoQaSimScriptVo);
-
         try {
 
             int result = autoQaMapper.deleteQASimScript(autoQaSimScriptVo);
@@ -131,6 +126,7 @@ public class AutoQASimService {
             if (result > 0) {
                 // 결과 리턴
                 resultMap.put("result", "S");
+                resultMap.put("data", autoQaSimScriptVo);
                 resultMap.put("resultMsg", "유사 스크립트 삭제 작업이 완료되었습니다.");
             } else {
                 resultMap.put("result", "F");

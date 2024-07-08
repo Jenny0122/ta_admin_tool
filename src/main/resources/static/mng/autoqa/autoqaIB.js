@@ -654,7 +654,7 @@ const addSimScript = function(scriptId) {
 		success: function(response) {
 			alert(response.resultMsg);
 
-			if (response.result == "S") location.reload();
+			if (response.result == "S") showPopupRowDetail('sim_script', scriptId);
 			//	document.querySelector("#update_pop button[type=submit]").disabled = false;
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
@@ -699,7 +699,7 @@ const updateSimScript = function(simScriptId) {
 		success: function(response) {
 			alert(response.resultMsg);
 
-			if (response.result == "S") location.reload();
+			if (response.result == "S") showPopupRowDetail('sim_script', response.data.scriptId);
 		//	document.querySelector("#update_pop button[type=submit]").disabled = false;
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
@@ -735,7 +735,7 @@ const deleteSimScript = function(simScriptId) {
 		success: function(response) {
 			alert(response.resultMsg);
 
-			if (response.result == "S") location.reload();
+			if (response.result == "S") showPopupRowDetail('sim_script', response.data.scriptId);
 		//	document.querySelector("#update_pop button[type=submit]").disabled = false;
 		},
 		error: function(jqXHR, textStatus, errorThrown) {

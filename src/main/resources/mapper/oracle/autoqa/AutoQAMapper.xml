@@ -116,10 +116,6 @@
 	
 	<!-- 유사스크립트 등록 -->
 	<insert id="insertQASimScript" parameterType="kr.co.wisenut.textminer.autoqa.vo.AutoQaSimScriptVo">
-		<selectKey resultType="int" keyProperty="scriptId" order="BEFORE">
-			SELECT COALESCE(MAX(SIMILARITY_SCRIPT_ID),0) + 1 FROM WISETM_QA_SIMILARITY_SCRIPT
-		</selectKey>
-		
 		INSERT /* kr.co.wisenut.mapper.AutoQAMapper.insertQASimScript */
 		INTO WISETM_QA_SIMILARITY_SCRIPT (
 			SIMILARITY_SCRIPT_ID
