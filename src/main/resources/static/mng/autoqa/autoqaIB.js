@@ -320,9 +320,9 @@ const showPopupRowDetail = function(target, scriptId) {
 					$("#sim_script_pop_header").html(headerStr)
 
 					var insertInputStr = "";
-						insertInputStr += "<span class=\"ml0 mt30\">유사 스크립트</span>\n"
-						insertInputStr += "<input type=\"text\" class=\"ml0 w50 mt30\" id=\"sim_script_new\" name=\"entry\">\n";
-						insertInputStr += "<input type=\"button\" class=\"btn btn_sky w65 mt30 ml10\" value=\"추가\" onclick=\"addSimScript(" + scriptId + ")\">\n"
+						insertInputStr += "<span class=\"ml0\">유사 스크립트</span>\n"
+						insertInputStr += "<input type=\"text\" class=\"ml20 w50\" id=\"sim_script_new\" name=\"entry\">\n";
+						insertInputStr += "<input type=\"button\" class=\"btn btn_sky w65 ml20\" value=\"추가\" onclick=\"addSimScript(" + scriptId + ")\">\n"
 
 					$("#sim_script_pop_insert").html(insertInputStr)
 
