@@ -315,8 +315,8 @@ const showPopupRowDetail = function(target, scriptId) {
 				success: function(data) {
 
 					var headerStr = "";
-					headerStr += "<h3 class=\"fL\">유사 스크립트 (" + "abcd" + ")</h3>\n";
-					   		  + "<a href=\"#\" class=\"close_create close fR\" onclick=\"hidePopup('sim_script');\"><i class=\"fas fa-times\"></i></a>\n";
+						headerStr += "<h3 class=\"fL\">유사 스크립트 (" + "abcd" + ")</h3>\n"
+						headerStr += "<a href=\"#\" class=\"close_create close fR\" onclick=\"hidePopup('sim_script');\"><i class=\"fas fa-times\"></i></a>\n";
 					$("#sim_script_pop_header").html(headerStr)
 
 					var insertInputStr = "";
