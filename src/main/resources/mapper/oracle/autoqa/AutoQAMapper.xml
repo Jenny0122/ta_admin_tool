@@ -132,7 +132,7 @@
 			, SCRIPT_ID
 		)
 		VALUES (
-			wisetm_qa_similarity_script.NEXTVAL
+			wisetm_qa_similarity_script_seq.NEXTVAL
             , #{simScriptCont}
             , 'N'
             , CURRENT_TIMESTAMP
