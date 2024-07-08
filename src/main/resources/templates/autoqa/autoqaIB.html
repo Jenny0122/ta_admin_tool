@@ -312,18 +312,14 @@
 			<div class="bg"></div>
 			<div class="pop_box medium">
 				<!--스크립트 추가 top-->
-				<div class="top clearfix">
-					<h3 class="fL">유사 스크립트 (준수항목 값)</h3>
-					<a href="#" class="close_create close fR" onclick="hidePopup('sim_script');"><i class="fas fa-times"></i></a>
-				</div>
+				<div class="top clearfix" id="sim_script_pop_header"></div>
 
 				<!-- 유사문장 popup 내용-->
 				<div class="pop_container large">
 					<div class="cont_box mt20">
 						<span>유사 스크립트 등록</span>
-						<div class="align_l clearfix">
+						<div class="align_l clearfix" id="sim_script_pop_insert">
 							<span class="ml0 mt30">유사 스크립트</span>
-							<input type="text" class="ml0 w50 mt30" id="test1" name="entry">
 							<input type="button" class="btn btn_sky w65 mt30 ml10" value="추가" onclick="addSimScript()">
 						</div>
 					</div>

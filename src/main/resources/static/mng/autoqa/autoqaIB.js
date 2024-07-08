@@ -76,7 +76,10 @@ function fnCateTree() {
 								"separator_before": false,
 								"separator_after": true,
 								"label": "생성",
-								"action": function(obj) {}
+								"action": function(obj) {
+									alert('우클릭')
+									console.log(obj)
+								}
 							}
 						}
 					}
@@ -292,6 +295,7 @@ const hidePopup = function(target) {
 	$target.hide();
 };
 
+// 스크립트 TABLE UI 내 유사문장 클릭 시 팝업
 const showPopupRowDetail = function(target, scriptId) {
 	let $target;
 
@@ -309,6 +313,17 @@ const showPopupRowDetail = function(target, scriptId) {
 				data: JSON.stringify(params),
 				async: false,
 				success: function(data) {
+
+					var headerStr = "";
+					headerStr += "<h3 class=\"fL\">유사 스크립트 (" + "abcd" + ")</h3>\n";
+					   		  + "<a href=\"#\" class=\"close_create close fR\" onclick=\"hidePopup('sim_script');\"><i class=\"fas fa-times\"></i></a>\n";
+					$("#sim_script_pop_header").html(headerStr)
+
+					var insertInputStr= "<input type=\"text\" class=\"ml0 w50 mt30\" id=\"script_id_" + scriptId + "\" name=\"entry\">\n"
+
+					$("#sim_script_pop_insert span").after(insertInputStr)
+
+
 					var rowData = data.resultList
 					var rows = ""
 					for(var i in rowData) {
@@ -636,7 +651,7 @@ const updateSimScript = function(simScriptId) {
 			alert(response.resultMsg);
 
 			if (response.result == "S") location.reload();
-			document.querySelector("#update_pop button[type=submit]").disabled = false;
+		//	document.querySelector("#update_pop button[type=submit]").disabled = false;
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			console.debug(jqXHR);
@@ -666,14 +681,13 @@ const deleteSimScript = function(simScriptId) {
 	$.ajax({
 		type: "DELETE",
 		url: `${contextPath}/autoqaRest/deleteQASimScript?simScriptId=` + simScriptId,
-		data: JSON.stringify(params), //default contentType: 'application/x-www-form-urlencoded'
 		beforeSend: function() {
 		},
 		success: function(response) {
 			alert(response.resultMsg);
 
 			if (response.result == "S") location.reload();
-			document.querySelector("#update_pop button[type=submit]").disabled = false;
+		//	document.querySelector("#update_pop button[type=submit]").disabled = false;
 		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			console.debug(jqXHR);

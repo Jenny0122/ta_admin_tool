@@ -122,28 +122,24 @@
 		
 		INSERT /* kr.co.wisenut.mapper.AutoQAMapper.insertQASimScript */
 		/* INTO  FROM  WISETM_QA_SIMILARITY_SCRIPT (SCRIPT_ID,SIMILARITY_SCRIPT_ID ,SIMILARITY_SCRIPT_CONT ,DEL_YN ,CRE_DT ,CRE_USER ,MOD_DT) */
-		INTO   FROM  WISETM_QA_SIMILARITY_SCRIPT
-			(SCRIPT_ID
-			,SIMILARITY_SCRIPT_ID
-			,SIMILARITY_SCRIPT_CONT
-			,DEL_YN
-			,CRE_DT
-			,CRE_USER
-			,MOD_DT
-			,MOD_USER
-			, CATEGORY_ID)
+		INTO   FROM  WISETM_QA_SIMILARITY_SCRIPT (
+			SIMILARITY_SCRIPT_CONT
+			, DEL_YN
+			, CRE_DT
+			, CRE_USER
+			, MOD_DT
+			, MOD_USER
+			, SCRIPT_ID
+		)
 		VALUES ( 
-		      #{scriptId}					
-             ,#{simScriptId}					
-             ,#{similarityScriptCont}			
-             ,#{score}						
-             ,#{order}						
-             ,#{delYn}						
-             , CURRENT_TIMESTAMP						
-             ,#{creUser}				
-             , CURRENT_TIMESTAMP				
-             ,#{modUser}
-			 ,#{categoryId}) 
+             #{simScriptCont}
+             , 'N'
+             , CURRENT_TIMESTAMP
+             , #{creUser}
+             , CURRENT_TIMESTAMP
+             , #{modUser}
+		     , #{scriptId}
+		)
 	</insert>
 	
 	<!-- 유사스크립트 수정 -->
@@ -164,9 +160,8 @@
 		SET    DEL_YN = 'Y'
 			, MOD_DT = CURRENT_TIMESTAMP
 			, MOD_USER = #{modUser}
-
-		WHERE  SCRIPT_ID = #{scriptId}
-		AND SIMILARITY_SCRIPT_ID = #{simScriptId})
+		WHERE  /* SCRIPT_ID = #{scriptId} AND */
+			   SIMILARITY_SCRIPT_ID = #{simScriptId})
 	</delete>
 	
 	
